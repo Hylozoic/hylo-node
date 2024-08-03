@@ -17,6 +17,8 @@ type Query {
   # Find an Comment by ID
   comment(id: ID): Comment
 
+  commonRoles: [CommonRole]
+
   collection(id: ID): Collection
 
   # Query for PersonConnections
@@ -226,6 +228,16 @@ type Query {
     # Return only posts that are one of these types: 'discussion', 'event', 'offer', 'project', 'proposal', 'request' and/or 'resource'
     types: [String]
   ): PostQuerySet
+
+  # Query for responsibilities
+  responsibilities(
+    # responsibilties for a group id
+    groupId: ID
+    # responsibilties for a groupRole id
+    groupRoleId: ID
+    # responsibilties for a commonRole id
+    commonRoleId: ID
+  ): [Responsibility]
 
   # Query for SavedSearches by user ID
   savedSearches(userId: ID): SavedSearchQuerySet
@@ -484,6 +496,20 @@ type CommentQuerySet {
   items: [Comment]
 }
 
+# Common Roles are standard roles that are always available in all groups
+type CommonRole {
+  id: ID
+  # The description of the role
+  description: String
+  # The emoji/icon used for the role
+  emoji: String
+  # The name of the role
+  name: String
+  # The responsiblities attached to the role
+  responsibilities: ResponsibilityQuerySet
+  responsibilitiesTotal: Int
+}
+
 # A CustomView for a Group
 type CustomView {
   id: ID
@@ -579,7 +605,7 @@ type Group {
   description: String
   # A geoJSON object outlining a geographic shape describing the border/boundaries of the group in the world
   geoShape: JSON
-  # The current invite link for this group (only a moderator of this group can access this attribute)
+  # The current invite link for this group
   invitePath: String
   # A string describing the physical location of this group in the world
   location: String
@@ -587,9 +613,9 @@ type Group {
   locationObject: Location
   # Number of members in this group
   memberCount: Int
-  # Word used to describe an admin/moderator of this group. Defaults to "Moderator"
+  # Word used to describe an admin/moderator of this group. Defaults to "Moderator". TODO: remove once mobile app switches to stewardDescriptor
   moderatorDescriptor: String
-  # Plural word used to describe admins/moderators of this group. Defaults to "Moderators"
+  # Plural word used to describe admins/moderators of this group. Defaults to "Moderators". TODO: remove once mobile app switches to stewardDescriptor
   moderatorDescriptorPlural: String
   # Group name
   name: String
@@ -603,6 +629,10 @@ type Group {
   settings: GroupSettings
   # Unique URL slug
   slug: String
+  # Word used to describe any steward of this group. Defaults to "Steward"
+  stewardDescriptor: String
+  # Plural word used to describe stewards of this group. Defaults to "Stewards"
+  stewardDescriptorPlural: String
   # Right now can either by 'farm' or null
   type: String
   # Word used to describe this type of group. Defaults to Group, or if type is set then defaults to the type (e.g. Farm)
@@ -698,6 +728,8 @@ type Group {
     boundingBox: [PointInput],
     # Return members with a specific groupRole
     groupRoleId: ID,
+    # Return members with a specific commonRole
+    commonRoleId: ID,
     # Number of people to return
     first: Int,
     # For pagination, return people after this offset in the query results
@@ -716,11 +748,21 @@ type Group {
     userId: ID
   ): MembershipQuerySet
 
-  # The group moderators
+  # TODO: remove when mobile app has been updated to use stewards
   moderators(
-    # For pagination, return moderators after this ID
+    # For pagination, return stewards after this ID
     cursor: ID,
-    # Number of moderators to return
+    # Number of stewards to return
+    first: Int,
+    # Determines sort order, either 'ASC' or 'DESC'
+    order: String
+  ): PersonQuerySet
+
+  # The group stewards - members who have common roles
+  stewards(
+    # For pagination, return stewards after this ID
+    cursor: ID,
+    # Number of stewards to return
     first: Int,
     # Determines sort order, either 'ASC' or 'DESC'
     order: String
@@ -802,6 +844,9 @@ type Group {
     # Filter posts by a set of post types: 'discussion', 'event', 'offer', 'project', 'proposal', request', 'resource'
     types: [String]
   ): PostQuerySet
+
+  # All responsibilities available to the group
+  responsibilities: [Responsibility]
 
   # All skills of members in this group
   skills(
@@ -930,7 +975,7 @@ type GroupJoinQuestionAnswerQuerySet {
 type GroupSettings {
   # The last date/time that the group agreements were updated
   agreementsLastUpdatedAt: Date
-  # Whether this group allows non-moderators to invite people (not currently used)
+  # Whether this group allows any member to invite people (not currently used)
   allowGroupInvites: Boolean
   # Whether to require questions being answered when a group requests to join this group
   askGroupToGroupJoinQuestions: Boolean
@@ -1001,6 +1046,8 @@ type GroupRole {
   groupId: ID
   name: String
   updatedAt: Date
+  responsibilities: ResponsibilityQuerySet
+  responsibilitiesTotal: Int
 }
 
 # A question required to be answered when a group requests to join this group
@@ -1051,6 +1098,20 @@ type GroupRoleQuerySet {
   total: Int
   hasMore: Boolean
   items: [GroupRole]
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type ResponsibilityQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Responsibility]
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type CommonRoleQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [CommonRole]
 }
 
 # Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
@@ -1284,6 +1345,8 @@ type Me {
     sortBy: String
   ): [Group]
 
+  groupRoles: GroupRoleQuerySet
+
   # Set of pending invites to Groups
   groupInvitesPending: InvitationQuerySet
 
@@ -1302,6 +1365,11 @@ type Me {
     # Determines sort order, either 'ASC' or 'DESC'. Memberships always sorted by order they were created.
     order: String
   ): [Membership]
+
+  # Set of common roles I have in groups. Can be filtered by groupId
+  membershipCommonRoles(
+    groupId: ID
+  ): MembershipCommonRoleQuerySet
 
   # The set of MessageThreads
   messageThreads(
@@ -1348,18 +1416,24 @@ type Membership {
   # The agreements this user has agreed to (or not) for this group
   agreements: MembershipAgreementQuerySet
   createdAt: Date
+  # The common roles this member has in this group
+  commonRoles: CommonRoleQuerySet
   groupId: ID
   group: Group
-  # Is this group membership a moderator role
+  # Is this group membership a moderator role. TODO: remove once mobile app has been updated to use new roles
   hasModeratorRole: Boolean
   # Answers to the join questions for this group
   joinQuestionAnswers: GroupJoinQuestionAnswerQuerySet
   # The last time the current logged in user viewed this group (if they are a member of it)
   lastViewedAt: String
+  # The common roles this members has in this group - just the join table data
+  membershipCommonRoles: MembershipCommonRoleQuerySet
+  # The group defined roles this members has in this group - just the join table data
+  membershipGroupRoles: MembershipGroupRoleQuerySet
   # Number of new posts in this group since the current logged in user viewed it (if they are a member of it)
   newPostCount: Int
   person: Person
-  # 0: default, 1: moderator
+  # 0: default, 1: moderator. TODO: deprecated, remove once mobile app has been updated to use new roles
   role: Int
   settings: MembershipSettings
 }
@@ -1384,6 +1458,50 @@ type MembershipAgreementQuerySet {
   total: Int
   hasMore: Boolean
   items: [MembershipAgreement]
+}
+
+# The common roles a user has in a group
+type MembershipCommonRole {
+  id: ID
+  commonRoleId: ID
+  commonRole: CommonRole
+  createdAt: Date
+  group: Group
+  groupId: ID
+  # same as commonRoleId
+  roleId: ID
+  updatedAt: Date
+  user: Person
+  userId: ID
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type MembershipCommonRoleQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [MembershipCommonRole]
+}
+
+# The common roles a user has in a group
+type MembershipGroupRole {
+  id: ID
+  createdAt: Date
+  group: Group
+  groupId: ID
+  groupRoleId: ID
+  groupRole: GroupRole
+  # same as groupRoleId
+  roleId: ID
+  updatedAt: Date
+  user: Person
+  userId: ID
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type MembershipGroupRoleQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [MembershipGroupRole]
 }
 
 # Settinga for a user's group membership
@@ -1511,6 +1629,10 @@ type Person {
     # Determines sort order, either 'ASC' or 'DESC'. Posts are sorted by order they were created.
     order: String
   ): CommentQuerySet
+  # Common roles that the user has in groups
+  commonRoles(
+    id: ID
+  ): CommonRoleQuerySet
   # The events this person is attending (that are visible to logged in user)
   eventsAttending: PostQuerySet
   # The set of Group Memberships this person has (that are visible to logged in user)
@@ -1522,9 +1644,12 @@ type Person {
     # Determines sort order, either 'ASC' or 'DESC'. Memberships always sorted by order they were created.
     order: String
   ): [Membership]
+  # The set of common roles this person has in groups. Can be filtered by groupId
+  membershipCommonRoles(
+    groupId: ID
+  ): MembershipCommonRoleQuerySet
   # All the member roles for a user
-  groupRoles: [GroupRole]
-  groupRolesTotal: Int
+  groupRoles: GroupRoleQuerySet
   # The set of Memberships to groups this person moderates (that are visible to logged in user
   moderatedGroupMemberships(first: Int, cursor: ID, order: String): [Membership]
   # The set of Posts this person has created (that are visible to logged in user)
@@ -1730,7 +1855,7 @@ type Post {
 
   # For proposal posts, load all the different options that people can vote on.
   proposalOptions: ProposalOptionQuerySet
-  
+
   # Load all votes for a proposal post. Note: not a queryset; to avoid paginating votes
   proposalVotes: ProposalVoteQuerySet
 
@@ -1829,6 +1954,19 @@ type ReactionQuerySet {
   total: Int
   hasMore: Boolean
   items: [Reaction]
+}
+
+# Responsibilities are either group-level platform powers (such as removing content or inviting new members) or non-platform group-specific responsibilities (such as handles budget, consent team, etc)
+type Responsibility {
+  id: ID
+  # If the responsibility is mapped to a group_role
+  responsibilityId: ID
+  # Description of this responsibility
+  description: String
+  # The name of the responsibility
+  title: String
+  # The type of responsibility: 'system' or 'group'
+  type: String
 }
 
 # A saved set of search/filter parameters for the map that can be reloaded later by a user
@@ -1999,11 +2137,19 @@ type ZapierTrigger {
 
 # The mutations accepted by Hylo
 type Mutation {
-  # For a moderator to accept an invitation to one of their groups to be related to another group (either as a parent or a child)
+  # For a steward to accept an invitation to one of their groups to be related to another group (either as a parent or a child)
   acceptGroupRelationshipInvite(groupRelationshipInviteId: ID): AcceptGroupRelationshipInviteResult
-  # For a moderator to accept a request from a Person to join a Group
+  # For a steward to accept a request from a Person to join a Group
   acceptJoinRequest(joinRequestId: ID): JoinRequest
-  # For a moderator to add a badge/role to a group
+  # For a steward to add a group responsibility to a group
+  addGroupResponsibility(
+    # The description of the responsibility
+    description: String,
+    # The name of the responsibility
+    title: String,
+    groupId: ID
+  ): Responsibility
+  # For a steward to add a badge/role to a group
   addGroupRole(
     color: String,
     description: String,
@@ -2011,11 +2157,11 @@ type Mutation {
     groupId: ID,
     name: String,
   ): GroupRole
-  # Add a person to a group. Only a moderator of the group can do this.
+  # Add a person to a group. Only a steward of the group can do this.
   addMember(
     groupId: ID,
     userId: ID,
-    # 0 = Regular member, 1 = moderator
+    # 0 = default, 1 = moderator
     role: Int
   ): GenericResult
   # Add a new moderator to a Group. Only a moderator of the Group can do this.
@@ -2024,13 +2170,20 @@ type Mutation {
   addPeopleToProjectRole(peopleIds: [ID], projectRoleId: ID): GenericResult
   # Add a Post to a Collection
   addPostToCollection(collectionId: ID, postId: ID): GenericResult
+  # Add responsibility to a role
+  addResponsibilityToRole(
+    responsibilityId: ID,
+    roleId: ID,
+    groupId: ID
+  ): Responsibility
   # Add a rvote to a proposal
   addProposalVote(postId: ID, optionId: ID): GenericResult
-  # For a moderator to add a badge/role to a group to a member of a group
+  # For a steward to add a badge/role to a group to a member of a group
   addRoleToMember(
-    groupRoleId: ID,
+    roleId: ID,
     groupId: ID,
     personId: ID,
+    isCommonRole: Boolean
   ): GroupRole
   # Add a skill to your profile
   addSkill(
@@ -2040,13 +2193,13 @@ type Mutation {
   ): Skill
   # Add a skill you want to learn to your profile
   addSkillToLearn(name: String): Skill
-  # Add a suggested skill to a Group. Only a group moderator can do this.
+  # Add a suggested skill to a Group. Only a group steward can do this.
   addSuggestedSkillToGroup(groupId: ID, name: String): Skill
-  # NOT USED RIGHT NOW. Toggle whether a Group allows non-moderators to invite new people to the Group. Only a group moderator can call this.
+  # NOT USED RIGHT NOW. Toggle whether a Group allows non-hosts to invite new people to the Group. Only a group steward can call this.
   allowGroupInvites(groupId: ID, data: Boolean): Group
   # For logged in user to block a user, meaning they will no longer see the user's posts and that user can no longer see theirs or message them.
   blockUser(blockedUserId: ID): GenericResult
-  # For a moderator of a group that has invited a group to be in relationship with it, to cancel that invitation.
+  # For a steward of a group that has invited a group to be in relationship with it, to cancel that invitation.
   cancelGroupRelationshipInvite(groupRelationshipInviteId: ID): GenericResult
   # For a Person who has requested to join another group to cancel that request.
   cancelJoinRequest(joinRequestId: ID): GenericResult
@@ -2084,16 +2237,22 @@ type Mutation {
   deactivateMe(id: ID): GenericResult
   # Used by current logged in user to delete their account permanently
   deleteMe: GenericResult
-  # For moderator to decline someone's request to join their Group
+  # For group host to decline someone's request to join their Group
   declineJoinRequest(joinRequestId: ID): JoinRequest
   # Delete an Affiliation from your profile
   deleteAffiliation(id: ID): ID
   # Delete a comment
   deleteComment(id: ID): GenericResult
-  # Delete a group that you are a moderator of
+  # Delete a group that you are a steward of
   deleteGroup(id: ID): GenericResult
-  # Remove the relationship between two groups if you are a moderator of one of them
+  # Remove the relationship between two groups if you are a steward of one of them
   deleteGroupRelationship(parentId: ID, childId: ID): GenericResult
+  # Delete a group responsibility from a group
+  deleteGroupResponsibility(
+    responsibilityId: ID,
+     groupId: ID,
+     groupRoleId: ID
+  ): GenericResult
   # Hide a topic within a group (it will still appear on posts in the group)
   deleteGroupTopic(id: ID): GenericResult
   # Delete a post you created
@@ -2106,7 +2265,7 @@ type Mutation {
   deleteSavedSearch(id: ID): ID
   # Delete a Zapier trigger (called by Zapier)
   deleteZapierTrigger(id: ID): Boolean
-  # Set an invitation to join a group as expired. Only a group moderator can call this.
+  # Set an invitation to join a group as expired. Only a group host can call this.
   expireInvitation(invitationId: ID): GenericResult
   # Look for a link preview of a URL, or if not found create one
   findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
@@ -2118,7 +2277,7 @@ type Mutation {
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
   # Mark one of your posts as fulfilled or completed
   fulfillPost(postId: ID): GenericResult
-  # Invite a group to join one of your groups as a child of it. Only a group moderator can call this.
+  # Invite a group to join one of your groups as a child of it. Only a group steward can call this.
   inviteGroupToJoinParent(parentId: ID, childId: ID): CreatedGroupRelationshipInvite
   # Invite one or more people to an event Post
   invitePeopleToEvent(eventId: ID, inviteeIds: [ID]): Post
@@ -2138,8 +2297,8 @@ type Mutation {
   markActivityRead(id: ID): Activity
   # Mark all notifications as read
   markAllActivitiesRead: GenericResult
-  # Send a message to all the moderators of a Group
-  messageGroupModerators(groupId: ID): ID
+  # Send a message to all the stewards of a Group
+  messageGroupStewards(groupId: ID): ID
   # Pin a post within a Group. Only a group moderator can call this.
   pinPost(postId: ID, groupId: ID): GenericResult
   # NOT USED RIGHT NOW
@@ -2148,19 +2307,19 @@ type Mutation {
   reactOn(entityId: ID, data: ReactionInput): Post
   # For a deactivated user to reactivate their account.
   reactivateMe(id: ID): GenericResult
-  # Regenerate the invite URL used to invite people to a Group. Only a group moderator can call this.
+  # Regenerate the invite URL used to invite people to a Group. Only a group Host can call this.
   regenerateAccessCode(groupId: ID): Group
   # Register a new mobile device to the current logged in user account
   registerDevice(playerId: String, platform: String, version: String): GenericResult
-  # Reinvite all pending invitations to the current group. Only a group moderator can call this.
+  # Reinvite all pending invitations to the current group. Only a group Host can call this.
   reinviteAll(groupId: ID): GenericResult
   # Create a new user account
   register(name: String, password: String): SignupResult
   # NOT USED RIGHT NOW
   registerStripeAccount(authorizationCode: String): GenericResult
-  # Reject a Group's invite or request to connect to one of your groups. Only a group moderator can call this.
+  # Reject a Group's invite or request to connect to one of your groups. Only a group steward can call this.
   rejectGroupRelationshipInvite(groupRelationshipInviteId: ID): GenericResult
-  # Remove a Person from a Group. Only a group moderator can call this.
+  # Remove a Person from a Group. Only a group Moderator can call this.
   removeMember(personId: ID, groupId: ID): Group
   # Remove a moderator from a Group.
   removeModerator(
@@ -2173,17 +2332,21 @@ type Mutation {
   removePost(postId: ID, slug: String, groupId: ID): GenericResult
   # Remove a Post from a Collection, if you have permission to
   removePostFromCollection(collectionId: ID, postId: ID): GenericResult
+  # Remove a group responsibility from a group
+  removeResponsibilityFromRole(
+    roleResponsibilityId: ID, groupId: ID
+  ): GenericResult
   # Remove a vote from a proposal
   removeProposalVote(postId: ID, optionId: ID): GenericResult
-  # Remove a badge/role from a member of a group, inititated by that member or by a group moderator
-  removeRoleFromMember(groupRoleId: ID, groupId: ID, personId: ID): GenericResult
+  # Remove a badge/role from a member of a group, inititated by that member or by a group Steward
+  removeRoleFromMember(roleId: ID, groupId: ID, personId: ID, isCommonRole: Boolean): GenericResult
   # Remove a skill from your user profile
   removeSkill(id: ID, name: String): GenericResult
   # Remove a skill you want to learn from your user profile
   removeSkillToLearn(id: ID, name: String): GenericResult
   # Remove a suggested skill from a Group by skill ID or name/text
   removeSuggestedSkillFromGroup(groupId: ID, id: ID, name: String): GenericResult
-  # Request to add one one of the groups you moderate to another group as a child group. Only a group moderator can call this.
+  # Request to add one one of the groups you moderate to another group as a child group. Only a group steward can call this.
   requestToAddGroupToParent(
     childId: ID,
     # Answers to any required questions to connect to the group
@@ -2224,7 +2387,7 @@ type Mutation {
   unfulfillPost(postId: ID): GenericResult
   # Edit a comment
   updateComment(id: ID, data: CommentInput): Comment
-  # Update a Group's settings. Only a group moderator can call this.
+  # Update a Group's settings. Only a group steward can call this.
   updateGroupSettings(id: ID, changes: GroupInput): Group
   # Update a Group's settings. Only can be called via API key.
   updateGroup(
@@ -2233,6 +2396,16 @@ type Mutation {
     # Update group as a particular User (with permission)
     asUserId: ID
   ): Group
+  # Update a group responsibility
+  updateGroupResponsibility(
+    responsibilityId: ID,
+    # The description of the responsibility
+    description: String,
+    # The name of the responsibility
+    title: String
+    # groupId
+    groupId: ID
+  ): Responsibility
   # Update a badge/role from a group and all associated roles
   updateGroupRole(
     groupRoleId: ID
@@ -2243,7 +2416,7 @@ type Mutation {
     name: String,
     active: Boolean
   ): GroupRole
-  # Update settings related a Topic in a Group. Only a group moderator can call this.
+  # Update settings related a Topic in a Group. Only a group steward can call this.
   updateGroupTopic(id: ID, data: GroupTopicInput): GenericResult
   # Update settings related to a Person following a Topic in a Group
   updateGroupTopicFollow(id: ID, data: GroupTopicFollowInput): GenericResult
@@ -2304,9 +2477,9 @@ type CreatedRequest {
 type CreatedGroupRelationshipInvite {
   # Whether the mutation succeeded or not
   success: Boolean
-  # In the case that the invite was from and to a group that the user is a moderator of then the invite automatically succeeds and a GroupRelationship is formed and returned
+  # In the case that the invite was from and to a group that the user is a steward of then the invite automatically succeeds and a GroupRelationship is formed and returned
   groupRelationship: GroupRelationship
-  # If the invite was to a group the user is not a moderator of then return the new GroupRelationshipInvite
+  # If the invite was to a group the user is not a steward of then return the new GroupRelationshipInvite
   groupRelationshipInvite: GroupRelationshipInvite
 }
 
@@ -2506,7 +2679,7 @@ input GroupInput {
   groupExtensions: [GroupExtensionInput]
   # Questions that a group requesting to connect must answer
   groupToGroupJoinQuestions: [QuestionInput]
-  # The current invite link for this group (only a moderator of this group can access this attribute)
+  # The current invite link for this group
   invitePath: String
   # Questions a Person must answer when requesting to join this group
   joinQuestions: [QuestionInput]
@@ -2514,9 +2687,9 @@ input GroupInput {
   location: String
   # ID of the geocoded location object
   locationId: ID
-  # Word used to describe an admin/moderator of this group. Defaults to "Moderator"
+  # Word used to describe an admin/moderator of this group. Defaults to "Moderator". TODO: remove once mobile app switches to stewardDescriptor
   moderatorDescriptor: String
-  # Plural word used to describe admins/moderators of this group. Defaults to "Moderators"
+  # Plural word used to describe admins/moderators of this group. Defaults to "Moderators". TODO: remove once mobile app switches to stewardDescriptor
   moderatorDescriptorPlural: String
   # Group name
   name: String
@@ -2536,6 +2709,10 @@ input GroupInput {
   slackConfigureUrl: String
   # Unique URL slug
   slug: String
+  # Word used to describe any steward of this group (someone with a Common Role). Defaults to "Steward"
+  stewardDescriptor: String
+  # Word used to describe stewards of this group (people with a Common Role). Defaults to "Stewards"
+  stewardDescriptorPlural: String
   # Right now can either by 'farm' or empty
   type: String
   # Word used to describe this type of group. Defaults to Group, or if type is set then defaults to the type (e.g. Farm)
@@ -2571,7 +2748,7 @@ input GroupTopicFollowInput {
 
 # Group settings
 input GroupSettingsInput {
-  # Whether this group allows non-moderators to invite people (not currently used)
+  # Whether this group allows non-hosts to invite people (not currently used)
   allowGroupInvites: Boolean
   # Whether to require questions being answered when a group requests to join this group
   askGroupToGroupJoinQuestions: Boolean
@@ -2804,6 +2981,14 @@ input ReactionInput {
   entityType: String
 }
 
+# Input for creating group responsibilities that don't have spceific power on the platform but convey information about a group member
+input ResponsibilityInput {
+  # The name of the responsibility
+  name: String
+  # The description of the responsibility
+  description: String
+}
+
 # A SavedSearch on the Map
 input SavedSearchInput {
   # The geographic bounding box
@@ -2852,4 +3037,3 @@ input UserSettingsInput {
   # The most recent stream post type filter used by this person
   streamPostType: String
 }
-

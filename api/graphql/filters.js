@@ -35,20 +35,21 @@ export const groupFilter = userId => relation => {
         const selectIdsForMember = Group.selectIdsForMember(userId)
         const parentGroupIds = GroupRelationship.parentIdsFor(selectIdsForMember)
         const childGroupIds = GroupRelationship.childIdsFor(selectIdsForMember)
-        const selectModeratedGroupIds = Group.selectIdsForMember(userId, { 'group_memberships.role': GroupMembership.Role.MODERATOR })
-        const childrenOfModeratedGroupIds = GroupRelationship.childIdsFor(selectModeratedGroupIds)
+        // You can see all related groups, even hidden ones, if you are a group Administrator
+        const selectStewardedGroupIds = Group.selectIdsByResponsibilities(userId, [Responsibility.Common.RESP_ADMINISTRATION])
+        const childrenOfStewardedGroupIds = GroupRelationship.childIdsFor(selectStewardedGroupIds)
 
         // Can see groups you are a member of...
         q2.whereIn('groups.id', selectIdsForMember)
         // + their parent groups
         q2.orWhereIn('groups.id', parentGroupIds)
-        // + child groups that are not hidden, except moderators of a group can see its hidden children
+        // + child groups that are not hidden, except Admininstrators of a group can see its hidden children
         q2.orWhere(q3 => {
           q3.where(q4 => {
             q4.whereIn('groups.id', childGroupIds)
             q4.andWhere('groups.visibility', '!=', Group.Visibility.HIDDEN)
           })
-          q3.orWhereIn('groups.id', childrenOfModeratedGroupIds)
+          q3.orWhereIn('groups.id', childrenOfStewardedGroupIds)
         })
         // + all public groups
         q2.orWhere(q5 => {
@@ -125,7 +126,7 @@ export const personFilter = userId => relation => relation.query(q => {
       q3.select('group_memberships.user_id')
       q3.whereIn('group_memberships.group_id', Group.selectIdsForMember(userId))
     })
-    const sharedConnections = UserConnection.query(ucq =>{
+    const sharedConnections = UserConnection.query(ucq => {
       ucq.select('other_user_id')
       ucq.where('user_connections.user_id', userId)
     })

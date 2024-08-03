@@ -6,13 +6,13 @@ import underlyingDeleteComment from '../../models/comment/deleteComment'
 import underlyingCreateComment from '../../models/comment/createComment'
 import underlyingUpdateComment from '../../models/comment/updateComment'
 
-export function canDeleteComment (userId, comment) {
+export async function canDeleteComment (userId, comment) {
   if (comment.get('user_id') === userId) return Promise.resolve(true)
   return comment.load('post.groups')
-  .then(comment => Promise.any(
-    comment.relations.post.relations.groups.map(c =>
-      GroupMembership.hasModeratorRole(userId, c))
-  ))
+    .then(comment => Promise.any(
+      comment.relations.post.relations.groups.map(g =>
+        GroupMembership.hasResponsibility(userId, g, Responsibility.constants.RESP_MANAGE_CONTENT))
+    ))
 }
 
 export function canUpdateComment (userId, comment) {
@@ -44,9 +44,9 @@ export async function createMessage (userId, data) {
   const followers = await post.followers().fetch()
   const blockedUserIds = (await BlockedUser.blockedFor(userId)).rows.map(r => r.user_id)
   const otherParticipants = followers.filter(f => f.id !== userId && !includes(f.id, blockedUserIds))
-  if (otherParticipants.length < 1) throw new GraphQLYogaError ('cannot send a message to this thread')
+  if (otherParticipants.length < 1) throw new GraphQLYogaError('cannot send a message to this thread')
   data.postId = data.messageThreadId
-  return createComment(userId, data)      
+  return createComment(userId, data)
 }
 
 export function updateComment (userId, { id, data }) {

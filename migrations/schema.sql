@@ -16,18 +16,23 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: postgis; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
+
 
 --
--- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
+-- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner: -
 --
 
-COMMENT ON SCHEMA public IS 'standard public schema';
+COMMENT ON EXTENSION postgis IS 'PostGIS geometry and geography spatial types and functions';
+
 
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
-
-CREATE EXTENSION postgis;
 
 --
 -- Name: activities; Type: TABLE; Schema: public; Owner: -
@@ -269,6 +274,71 @@ CREATE SEQUENCE public.comments_tags_id_seq
 --
 
 ALTER SEQUENCE public.comments_tags_id_seq OWNED BY public.comments_tags.id;
+
+
+--
+-- Name: common_roles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.common_roles (
+    id integer NOT NULL,
+    name text NOT NULL,
+    description text,
+    emoji text,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: common_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.common_roles_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: common_roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.common_roles_id_seq OWNED BY public.common_roles.id;
+
+
+--
+-- Name: common_roles_responsibilities; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.common_roles_responsibilities (
+    id integer NOT NULL,
+    common_role_id bigint,
+    responsibility_id bigint
+);
+
+
+--
+-- Name: common_roles_responsibilities_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.common_roles_responsibilities_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: common_roles_responsibilities_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.common_roles_responsibilities_id_seq OWNED BY public.common_roles_responsibilities.id;
 
 
 --
@@ -900,6 +970,53 @@ CREATE TABLE public.group_memberships (
 
 
 --
+-- Name: group_memberships_common_roles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.group_memberships_common_roles (
+    id integer NOT NULL,
+    common_role_id bigint,
+    user_id bigint,
+    group_id bigint
+);
+
+
+--
+-- Name: group_memberships_common_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.group_memberships_common_roles_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: group_memberships_common_roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.group_memberships_common_roles_id_seq OWNED BY public.group_memberships_common_roles.id;
+
+
+--
+-- Name: group_memberships_group_roles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.group_memberships_group_roles (
+    id integer NOT NULL,
+    group_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    group_role_id bigint NOT NULL,
+    active boolean,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
 -- Name: group_memberships_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -959,6 +1076,37 @@ CREATE SEQUENCE public.group_relationship_invites_id_seq
 --
 
 ALTER SEQUENCE public.group_relationship_invites_id_seq OWNED BY public.group_relationship_invites.id;
+
+
+--
+-- Name: group_roles_responsibilities; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.group_roles_responsibilities (
+    id integer NOT NULL,
+    group_role_id bigint,
+    responsibility_id bigint
+);
+
+
+--
+-- Name: group_roles_responsibilities_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.group_roles_responsibilities_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: group_roles_responsibilities_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.group_roles_responsibilities_id_seq OWNED BY public.group_roles_responsibilities.id;
 
 
 --
@@ -1092,8 +1240,8 @@ CREATE TABLE public.groups (
     geo_shape public.geometry(Polygon,4326),
     type_descriptor character varying(255) DEFAULT NULL::character varying,
     type_descriptor_plural character varying(255) DEFAULT NULL::character varying,
-    moderator_descriptor character varying(255) DEFAULT NULL::character varying,
-    moderator_descriptor_plural character varying(255) DEFAULT NULL::character varying,
+    steward_descriptor character varying(255) DEFAULT NULL::character varying,
+    steward_descriptor_plural character varying(255) DEFAULT NULL::character varying,
     about_video_uri character varying(255),
     allow_in_public boolean DEFAULT false,
     purpose text
@@ -1168,23 +1316,6 @@ CREATE TABLE public.groups_posts (
 
 
 --
--- Name: groups_roles; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.groups_roles (
-    id integer NOT NULL,
-    group_id bigint,
-    name character varying(255),
-    emoji character varying(255),
-    color character varying(255),
-    active boolean,
-    created_at timestamp with time zone,
-    updated_at timestamp with time zone,
-    description character varying(255)
-);
-
-
---
 -- Name: groups_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1198,10 +1329,20 @@ CREATE SEQUENCE public.groups_roles_id_seq
 
 
 --
--- Name: groups_roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: groups_roles; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.groups_roles_id_seq OWNED BY public.groups_roles.id;
+CREATE TABLE public.groups_roles (
+    id integer DEFAULT nextval('public.groups_roles_id_seq'::regclass) NOT NULL,
+    group_id bigint,
+    name character varying(255),
+    emoji character varying(255),
+    color character varying(255),
+    active boolean,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    description character varying(255)
+);
 
 
 --
@@ -1479,21 +1620,6 @@ CREATE TABLE public.media (
 
 
 --
--- Name: members_roles; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.members_roles (
-    id integer NOT NULL,
-    group_id bigint NOT NULL,
-    user_id bigint NOT NULL,
-    group_role_id bigint NOT NULL,
-    active boolean,
-    created_at timestamp with time zone,
-    updated_at timestamp with time zone
-);
-
-
---
 -- Name: members_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1510,7 +1636,22 @@ CREATE SEQUENCE public.members_roles_id_seq
 -- Name: members_roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.members_roles_id_seq OWNED BY public.members_roles.id;
+ALTER SEQUENCE public.members_roles_id_seq OWNED BY public.group_memberships_group_roles.id;
+
+
+--
+-- Name: members_roles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.members_roles (
+    id integer DEFAULT nextval('public.members_roles_id_seq'::regclass) NOT NULL,
+    group_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    group_role_id bigint NOT NULL,
+    active boolean,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
 
 
 --
@@ -1715,9 +1856,7 @@ CREATE TABLE public.oidc_payloads (
     user_code character varying(255),
     uid character varying(255),
     expires_at timestamp with time zone,
-    consumed_at timestamp with time zone,
-    created_at timestamp with time zone,
-    updated_at timestamp with time zone
+    consumed_at timestamp with time zone
 );
 
 
@@ -1816,7 +1955,6 @@ CREATE TABLE public.posts (
     timezone character varying(255),
     quorum bigint,
     proposal_status text,
-    proposal_strict boolean DEFAULT false,
     proposal_outcome text,
     voting_method text,
     anonymous_voting text,
@@ -1966,6 +2104,7 @@ CREATE SEQUENCE public.project_roles_id_seq
 
 ALTER SEQUENCE public.project_roles_id_seq OWNED BY public.project_roles.id;
 
+
 --
 -- Name: proposal_options; Type: TABLE; Schema: public; Owner: -
 --
@@ -1973,9 +2112,9 @@ ALTER SEQUENCE public.project_roles_id_seq OWNED BY public.project_roles.id;
 CREATE TABLE public.proposal_options (
     id integer NOT NULL,
     post_id bigint NOT NULL,
-    text text NOT NULL,
     emoji text,
-    color text
+    color text,
+    text text NOT NULL
 );
 
 
@@ -2030,6 +2169,7 @@ CREATE SEQUENCE public.proposal_votes_id_seq
 --
 
 ALTER SEQUENCE public.proposal_votes_id_seq OWNED BY public.proposal_votes.id;
+
 
 --
 -- Name: users_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -2193,6 +2333,41 @@ CREATE TABLE public.reactions (
     emoji_label text,
     entity_type text
 );
+
+
+--
+-- Name: responsibilities; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.responsibilities (
+    id integer NOT NULL,
+    title text NOT NULL,
+    description text,
+    type text,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    group_id bigint
+);
+
+
+--
+-- Name: responsibilities_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.responsibilities_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: responsibilities_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.responsibilities_id_seq OWNED BY public.responsibilities.id;
 
 
 --
@@ -2821,6 +2996,20 @@ ALTER TABLE ONLY public.comments_tags ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: common_roles id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.common_roles ALTER COLUMN id SET DEFAULT nextval('public.common_roles_id_seq'::regclass);
+
+
+--
+-- Name: common_roles_responsibilities id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.common_roles_responsibilities ALTER COLUMN id SET DEFAULT nextval('public.common_roles_responsibilities_id_seq'::regclass);
+
+
+--
 -- Name: communities_users id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -2905,6 +3094,20 @@ ALTER TABLE ONLY public.group_memberships ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
+-- Name: group_memberships_common_roles id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_memberships_common_roles ALTER COLUMN id SET DEFAULT nextval('public.group_memberships_common_roles_id_seq'::regclass);
+
+
+--
+-- Name: group_memberships_group_roles id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_memberships_group_roles ALTER COLUMN id SET DEFAULT nextval('public.members_roles_id_seq'::regclass);
+
+
+--
 -- Name: group_relationship_invites id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -2916,6 +3119,13 @@ ALTER TABLE ONLY public.group_relationship_invites ALTER COLUMN id SET DEFAULT n
 --
 
 ALTER TABLE ONLY public.group_relationships ALTER COLUMN id SET DEFAULT nextval('public.group_connections_id_seq'::regclass);
+
+
+--
+-- Name: group_roles_responsibilities id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_roles_responsibilities ALTER COLUMN id SET DEFAULT nextval('public.group_roles_responsibilities_id_seq'::regclass);
 
 
 --
@@ -2961,13 +3171,6 @@ ALTER TABLE ONLY public.groups_posts ALTER COLUMN id SET DEFAULT nextval('public
 
 
 --
--- Name: groups_roles id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.groups_roles ALTER COLUMN id SET DEFAULT nextval('public.groups_roles_id_seq'::regclass);
-
-
---
 -- Name: groups_suggested_skills id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -3007,13 +3210,6 @@ ALTER TABLE ONLY public.link_previews ALTER COLUMN id SET DEFAULT nextval('publi
 --
 
 ALTER TABLE ONLY public.locations ALTER COLUMN id SET DEFAULT nextval('public.locations_id_seq'::regclass);
-
-
---
--- Name: members_roles id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.members_roles ALTER COLUMN id SET DEFAULT nextval('public.members_roles_id_seq'::regclass);
 
 
 --
@@ -3078,6 +3274,7 @@ ALTER TABLE ONLY public.project_contributions ALTER COLUMN id SET DEFAULT nextva
 
 ALTER TABLE ONLY public.project_roles ALTER COLUMN id SET DEFAULT nextval('public.project_roles_id_seq'::regclass);
 
+
 --
 -- Name: proposal_options id; Type: DEFAULT; Schema: public; Owner: -
 --
@@ -3091,6 +3288,7 @@ ALTER TABLE ONLY public.proposal_options ALTER COLUMN id SET DEFAULT nextval('pu
 
 ALTER TABLE ONLY public.proposal_votes ALTER COLUMN id SET DEFAULT nextval('public.proposal_votes_id_seq'::regclass);
 
+
 --
 -- Name: push_notifications id; Type: DEFAULT; Schema: public; Owner: -
 --
@@ -3103,6 +3301,13 @@ ALTER TABLE ONLY public.push_notifications ALTER COLUMN id SET DEFAULT nextval('
 --
 
 ALTER TABLE ONLY public.questions ALTER COLUMN id SET DEFAULT nextval('public.questions_id_seq'::regclass);
+
+
+--
+-- Name: responsibilities id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.responsibilities ALTER COLUMN id SET DEFAULT nextval('public.responsibilities_id_seq'::regclass);
 
 
 --
@@ -3300,6 +3505,22 @@ ALTER TABLE ONLY public.comments_tags
 
 
 --
+-- Name: common_roles common_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.common_roles
+    ADD CONSTRAINT common_roles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: common_roles_responsibilities common_roles_responsibilities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.common_roles_responsibilities
+    ADD CONSTRAINT common_roles_responsibilities_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: groups_tags communities_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3420,6 +3641,14 @@ ALTER TABLE ONLY public.group_join_questions
 
 
 --
+-- Name: group_memberships_common_roles group_memberships_common_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_memberships_common_roles
+    ADD CONSTRAINT group_memberships_common_roles_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: group_memberships group_memberships_group_id_user_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3441,6 +3670,14 @@ ALTER TABLE ONLY public.group_memberships
 
 ALTER TABLE ONLY public.group_relationship_invites
     ADD CONSTRAINT group_relationship_invites_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: group_roles_responsibilities group_roles_responsibilities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_roles_responsibilities
+    ADD CONSTRAINT group_roles_responsibilities_pkey PRIMARY KEY (id);
 
 
 --
@@ -3588,10 +3825,10 @@ ALTER TABLE ONLY public.locations
 
 
 --
--- Name: members_roles members_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: group_memberships_group_roles members_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.members_roles
+ALTER TABLE ONLY public.group_memberships_group_roles
     ADD CONSTRAINT members_roles_pkey PRIMARY KEY (id);
 
 
@@ -3802,6 +4039,7 @@ ALTER TABLE ONLY public.project_contributions
 ALTER TABLE ONLY public.project_roles
     ADD CONSTRAINT project_roles_pkey PRIMARY KEY (id);
 
+
 --
 -- Name: proposal_options proposal_options_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
@@ -3809,12 +4047,14 @@ ALTER TABLE ONLY public.project_roles
 ALTER TABLE ONLY public.proposal_options
     ADD CONSTRAINT proposal_options_pkey PRIMARY KEY (id);
 
+
 --
 -- Name: proposal_votes proposal_votes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.proposal_votes
     ADD CONSTRAINT proposal_votes_pkey PRIMARY KEY (id);
+
 
 --
 -- Name: questions questions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
@@ -3830,6 +4070,14 @@ ALTER TABLE ONLY public.questions
 
 ALTER TABLE ONLY public.push_notifications
     ADD CONSTRAINT queued_pushes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: responsibilities responsibilities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.responsibilities
+    ADD CONSTRAINT responsibilities_pkey PRIMARY KEY (id);
 
 
 --
@@ -4139,6 +4387,13 @@ CREATE INDEX group_join_questions_group_id_index ON public.group_join_questions 
 
 
 --
+-- Name: group_memberships_common_roles_group_id_user_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX group_memberships_common_roles_group_id_user_id_index ON public.group_memberships_common_roles USING btree (group_id, user_id);
+
+
+--
 -- Name: group_relationship_invites_from_group_id_to_group_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4377,6 +4632,20 @@ CREATE INDEX notifications_pk_medium_0 ON public.notifications USING btree (id) 
 
 
 --
+-- Name: posts_proposal_outcome_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX posts_proposal_outcome_index ON public.posts USING btree (proposal_outcome);
+
+
+--
+-- Name: posts_proposal_status_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX posts_proposal_status_index ON public.posts USING btree (proposal_status);
+
+
+--
 -- Name: public_communities_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4427,22 +4696,6 @@ ALTER TABLE ONLY public.activities
 
 
 --
--- Name: activities activities_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.activities
-    ADD CONSTRAINT activities_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: activities activities_other_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.activities
-    ADD CONSTRAINT activities_other_group_id_foreign FOREIGN KEY (other_group_id) REFERENCES public.groups(id);
-
-
---
 -- Name: activities activities_parent_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4456,14 +4709,6 @@ ALTER TABLE ONLY public.activities
 
 ALTER TABLE ONLY public.activities
     ADD CONSTRAINT activities_project_contribution_id_foreign FOREIGN KEY (project_contribution_id) REFERENCES public.project_contributions(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: activities activity_actor_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.activities
-    ADD CONSTRAINT activity_actor_id_foreign FOREIGN KEY (actor_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -4483,75 +4728,11 @@ ALTER TABLE ONLY public.activities
 
 
 --
--- Name: activities activity_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.activities
-    ADD CONSTRAINT activity_post_id_foreign FOREIGN KEY (post_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: activities activity_reader_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.activities
-    ADD CONSTRAINT activity_reader_id_foreign FOREIGN KEY (reader_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: blocked_users blocked_users_blocked_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.blocked_users
-    ADD CONSTRAINT blocked_users_blocked_user_id_foreign FOREIGN KEY (blocked_user_id) REFERENCES public.users(id);
-
-
---
--- Name: blocked_users blocked_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.blocked_users
-    ADD CONSTRAINT blocked_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id);
-
-
---
--- Name: collections collections_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.collections
-    ADD CONSTRAINT collections_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: collections_posts collections_posts_collection_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.collections_posts
     ADD CONSTRAINT collections_posts_collection_id_foreign FOREIGN KEY (collection_id) REFERENCES public.collections(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: collections_posts collections_posts_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.collections_posts
-    ADD CONSTRAINT collections_posts_post_id_foreign FOREIGN KEY (post_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: collections_posts collections_posts_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.collections_posts
-    ADD CONSTRAINT collections_posts_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: collections collections_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.collections
-    ADD CONSTRAINT collections_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -4579,6 +4760,22 @@ ALTER TABLE ONLY public.comments_tags
 
 
 --
+-- Name: common_roles_responsibilities common_roles_responsibilities_common_role_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.common_roles_responsibilities
+    ADD CONSTRAINT common_roles_responsibilities_common_role_id_foreign FOREIGN KEY (common_role_id) REFERENCES public.common_roles(id);
+
+
+--
+-- Name: common_roles_responsibilities common_roles_responsibilities_responsibility_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.common_roles_responsibilities
+    ADD CONSTRAINT common_roles_responsibilities_responsibility_id_foreign FOREIGN KEY (responsibility_id) REFERENCES public.responsibilities(id);
+
+
+--
 -- Name: communities communities_location_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4595,14 +4792,6 @@ ALTER TABLE ONLY public.groups_tags
 
 
 --
--- Name: groups_tags communities_tags_owner_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.groups_tags
-    ADD CONSTRAINT communities_tags_owner_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: groups_tags communities_tags_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4616,14 +4805,6 @@ ALTER TABLE ONLY public.groups_tags
 
 ALTER TABLE ONLY public.group_invites
     ADD CONSTRAINT community_invite_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES public.tags(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: group_invites community_invites_expired_by_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.group_invites
-    ADD CONSTRAINT community_invites_expired_by_id_foreign FOREIGN KEY (expired_by_id) REFERENCES public.users(id);
 
 
 --
@@ -4667,46 +4848,6 @@ ALTER TABLE ONLY public.custom_views
 
 
 --
--- Name: custom_views custom_views_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.custom_views
-    ADD CONSTRAINT custom_views_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: devices devices_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.devices
-    ADD CONSTRAINT devices_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: event_invitations event_invitations_event_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.event_invitations
-    ADD CONSTRAINT event_invitations_event_id_foreign FOREIGN KEY (event_id) REFERENCES public.posts(id);
-
-
---
--- Name: event_invitations event_invitations_inviter_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.event_invitations
-    ADD CONSTRAINT event_invitations_inviter_id_foreign FOREIGN KEY (inviter_id) REFERENCES public.users(id);
-
-
---
--- Name: event_invitations event_invitations_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.event_invitations
-    ADD CONSTRAINT event_invitations_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id);
-
-
---
 -- Name: event_responses event_responses_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4723,30 +4864,6 @@ ALTER TABLE ONLY public.event_responses
 
 
 --
--- Name: comments fk_comment_deactivated_by_01; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.comments
-    ADD CONSTRAINT fk_comment_deactivated_by_01 FOREIGN KEY (deactivated_by_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: comments fk_comment_post_2; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.comments
-    ADD CONSTRAINT fk_comment_post_2 FOREIGN KEY (post_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: comments fk_comment_user_1; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.comments
-    ADD CONSTRAINT fk_comment_user_1 FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: communities fk_community_created_by_1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4760,22 +4877,6 @@ ALTER TABLE ONLY public.communities
 
 ALTER TABLE ONLY public.group_invites
     ADD CONSTRAINT fk_community_invite_community_1 FOREIGN KEY (community_id) REFERENCES public.communities(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: group_invites fk_community_invite_invited_by_3; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.group_invites
-    ADD CONSTRAINT fk_community_invite_invited_by_3 FOREIGN KEY (invited_by_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: group_invites fk_community_invite_used_by_2; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.group_invites
-    ADD CONSTRAINT fk_community_invite_used_by_2 FOREIGN KEY (used_by_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -4819,35 +4920,11 @@ ALTER TABLE ONLY public.follows
 
 
 --
--- Name: linked_account fk_linked_account_user_4; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.linked_account
-    ADD CONSTRAINT fk_linked_account_user_4 FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: media fk_media_post_1; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.media
-    ADD CONSTRAINT fk_media_post_1 FOREIGN KEY (post_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: groups_posts fk_post_community_community_02; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.groups_posts
     ADD CONSTRAINT fk_post_community_community_02 FOREIGN KEY (community_id) REFERENCES public.communities(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: groups_posts fk_post_community_post_01; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.groups_posts
-    ADD CONSTRAINT fk_post_community_post_01 FOREIGN KEY (post_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -4923,22 +5000,6 @@ ALTER TABLE ONLY public.communities_users
 
 
 --
--- Name: reactions fk_vote_user_13; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.reactions
-    ADD CONSTRAINT fk_vote_user_13 FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: flagged_items flagged_items_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.flagged_items
-    ADD CONSTRAINT flagged_items_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: tag_follows followed_tags_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4955,35 +5016,11 @@ ALTER TABLE ONLY public.tag_follows
 
 
 --
--- Name: tag_follows followed_tags_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.tag_follows
-    ADD CONSTRAINT followed_tags_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: follows follows_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.follows
     ADD CONSTRAINT follows_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES public.comments(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: group_relationships group_connections_child_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.group_relationships
-    ADD CONSTRAINT group_connections_child_group_id_foreign FOREIGN KEY (child_group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: group_relationships group_connections_parent_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.group_relationships
-    ADD CONSTRAINT group_connections_parent_group_id_foreign FOREIGN KEY (parent_group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -4995,46 +5032,6 @@ ALTER TABLE ONLY public.group_extensions
 
 
 --
--- Name: group_extensions group_extensions_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.group_extensions
-    ADD CONSTRAINT group_extensions_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id);
-
-
---
--- Name: group_invites group_invites_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.group_invites
-    ADD CONSTRAINT group_invites_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: group_join_questions_answers group_join_questions_answers_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.group_join_questions_answers
-    ADD CONSTRAINT group_join_questions_answers_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: group_join_questions_answers group_join_questions_answers_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.group_join_questions_answers
-    ADD CONSTRAINT group_join_questions_answers_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: group_join_questions group_join_questions_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.group_join_questions
-    ADD CONSTRAINT group_join_questions_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id);
-
-
---
 -- Name: group_join_questions group_join_questions_question_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5043,11 +5040,27 @@ ALTER TABLE ONLY public.group_join_questions
 
 
 --
--- Name: group_memberships group_memberships_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: group_memberships_common_roles group_memberships_common_roles_common_role_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.group_memberships
-    ADD CONSTRAINT group_memberships_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE ONLY public.group_memberships_common_roles
+    ADD CONSTRAINT group_memberships_common_roles_common_role_id_foreign FOREIGN KEY (common_role_id) REFERENCES public.common_roles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: group_memberships_common_roles group_memberships_common_roles_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_memberships_common_roles
+    ADD CONSTRAINT group_memberships_common_roles_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id);
+
+
+--
+-- Name: group_memberships_common_roles group_memberships_common_roles_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_memberships_common_roles
+    ADD CONSTRAINT group_memberships_common_roles_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -5059,59 +5072,19 @@ ALTER TABLE ONLY public.group_memberships
 
 
 --
--- Name: group_memberships group_memberships_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: group_roles_responsibilities group_roles_responsibilities_group_role_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.group_memberships
-    ADD CONSTRAINT group_memberships_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id);
-
-
---
--- Name: group_relationship_invites group_relationship_invites_canceled_by_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.group_relationship_invites
-    ADD CONSTRAINT group_relationship_invites_canceled_by_id_foreign FOREIGN KEY (canceled_by_id) REFERENCES public.users(id);
+ALTER TABLE ONLY public.group_roles_responsibilities
+    ADD CONSTRAINT group_roles_responsibilities_group_role_id_foreign FOREIGN KEY (group_role_id) REFERENCES public.groups_roles(id);
 
 
 --
--- Name: group_relationship_invites group_relationship_invites_created_by_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: group_roles_responsibilities group_roles_responsibilities_responsibility_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.group_relationship_invites
-    ADD CONSTRAINT group_relationship_invites_created_by_id_foreign FOREIGN KEY (created_by_id) REFERENCES public.users(id);
-
-
---
--- Name: group_relationship_invites group_relationship_invites_from_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.group_relationship_invites
-    ADD CONSTRAINT group_relationship_invites_from_group_id_foreign FOREIGN KEY (from_group_id) REFERENCES public.groups(id);
-
-
---
--- Name: group_relationship_invites group_relationship_invites_processed_by_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.group_relationship_invites
-    ADD CONSTRAINT group_relationship_invites_processed_by_id_foreign FOREIGN KEY (processed_by_id) REFERENCES public.users(id);
-
-
---
--- Name: group_relationship_invites group_relationship_invites_to_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.group_relationship_invites
-    ADD CONSTRAINT group_relationship_invites_to_group_id_foreign FOREIGN KEY (to_group_id) REFERENCES public.groups(id);
-
-
---
--- Name: group_to_group_join_questions group_to_group_join_questions_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.group_to_group_join_questions
-    ADD CONSTRAINT group_to_group_join_questions_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id);
+ALTER TABLE ONLY public.group_roles_responsibilities
+    ADD CONSTRAINT group_roles_responsibilities_responsibility_id_foreign FOREIGN KEY (responsibility_id) REFERENCES public.responsibilities(id);
 
 
 --
@@ -5139,14 +5112,6 @@ ALTER TABLE ONLY public.group_to_group_join_request_question_answers
 
 
 --
--- Name: group_widgets group_widgets_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.group_widgets
-    ADD CONSTRAINT group_widgets_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id);
-
-
---
 -- Name: group_widgets group_widgets_widget_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5160,14 +5125,6 @@ ALTER TABLE ONLY public.group_widgets
 
 ALTER TABLE ONLY public.groups_agreements
     ADD CONSTRAINT groups_agreements_agreement_id_foreign FOREIGN KEY (agreement_id) REFERENCES public.agreements(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: groups_agreements groups_agreements_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.groups_agreements
-    ADD CONSTRAINT groups_agreements_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -5187,14 +5144,6 @@ ALTER TABLE ONLY public.groups
 
 
 --
--- Name: groups_posts groups_posts_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.groups_posts
-    ADD CONSTRAINT groups_posts_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: groups_roles groups_roles_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5203,27 +5152,11 @@ ALTER TABLE ONLY public.groups_roles
 
 
 --
--- Name: groups_suggested_skills groups_suggested_skills_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.groups_suggested_skills
-    ADD CONSTRAINT groups_suggested_skills_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id);
-
-
---
 -- Name: groups_suggested_skills groups_suggested_skills_skill_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.groups_suggested_skills
     ADD CONSTRAINT groups_suggested_skills_skill_id_foreign FOREIGN KEY (skill_id) REFERENCES public.skills(id);
-
-
---
--- Name: groups_tags groups_tags_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.groups_tags
-    ADD CONSTRAINT groups_tags_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -5251,27 +5184,11 @@ ALTER TABLE ONLY public.join_requests
 
 
 --
--- Name: join_requests join_requests_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.join_requests
-    ADD CONSTRAINT join_requests_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: join_requests join_requests_processed_by_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.join_requests
     ADD CONSTRAINT join_requests_processed_by_id_foreign FOREIGN KEY (processed_by_id) REFERENCES public.users(id);
-
-
---
--- Name: join_requests join_requests_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.join_requests
-    ADD CONSTRAINT join_requests_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -5283,26 +5200,26 @@ ALTER TABLE ONLY public.media
 
 
 --
--- Name: members_roles members_roles_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: group_memberships_group_roles members_roles_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.members_roles
+ALTER TABLE ONLY public.group_memberships_group_roles
     ADD CONSTRAINT members_roles_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: members_roles members_roles_group_role_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: group_memberships_group_roles members_roles_group_role_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.members_roles
+ALTER TABLE ONLY public.group_memberships_group_roles
     ADD CONSTRAINT members_roles_group_role_id_foreign FOREIGN KEY (group_role_id) REFERENCES public.groups_roles(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: members_roles members_roles_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: group_memberships_group_roles members_roles_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.members_roles
+ALTER TABLE ONLY public.group_memberships_group_roles
     ADD CONSTRAINT members_roles_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -5355,14 +5272,6 @@ ALTER TABLE ONLY public.notifications
 
 
 --
--- Name: notifications notifications_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.notifications
-    ADD CONSTRAINT notifications_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id);
-
-
---
 -- Name: posts post_link_preview_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5403,14 +5312,6 @@ ALTER TABLE ONLY public.posts
 
 
 --
--- Name: posts_tags posts_tags_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.posts_tags
-    ADD CONSTRAINT posts_tags_post_id_foreign FOREIGN KEY (post_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: posts_tags posts_tags_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5419,27 +5320,11 @@ ALTER TABLE ONLY public.posts_tags
 
 
 --
--- Name: posts_users posts_users_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.posts_users
-    ADD CONSTRAINT posts_users_post_id_foreign FOREIGN KEY (post_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: posts_users posts_users_project_role_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.posts_users
     ADD CONSTRAINT posts_users_project_role_id_foreign FOREIGN KEY (project_role_id) REFERENCES public.project_roles(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: posts_users posts_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.posts_users
-    ADD CONSTRAINT posts_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -5465,6 +5350,7 @@ ALTER TABLE ONLY public.project_contributions
 ALTER TABLE ONLY public.project_roles
     ADD CONSTRAINT project_roles_post_id_foreign FOREIGN KEY (post_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
 
+
 --
 -- Name: proposal_options proposal_options_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
@@ -5472,8 +5358,6 @@ ALTER TABLE ONLY public.project_roles
 ALTER TABLE ONLY public.proposal_options
     ADD CONSTRAINT proposal_options_post_id_foreign FOREIGN KEY (post_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
 
-
---
 -- Name: proposal_votes proposal_votes_option_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5497,13 +5381,20 @@ ALTER TABLE ONLY public.proposal_votes
     ADD CONSTRAINT proposal_votes_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
-
 --
 -- Name: push_notifications push_notifications_device_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.push_notifications
     ADD CONSTRAINT push_notifications_device_id_foreign FOREIGN KEY (device_id) REFERENCES public.devices(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: responsibilities responsibilities_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.responsibilities
+    ADD CONSTRAINT responsibilities_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id);
 
 
 --
@@ -5523,83 +5414,11 @@ ALTER TABLE ONLY public.saved_search_topics
 
 
 --
--- Name: saved_searches saved_searches_last_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.saved_searches
-    ADD CONSTRAINT saved_searches_last_post_id_foreign FOREIGN KEY (last_post_id) REFERENCES public.posts(id);
-
-
---
--- Name: saved_searches saved_searches_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.saved_searches
-    ADD CONSTRAINT saved_searches_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id);
-
-
---
 -- Name: skills_users skills_users_skill_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.skills_users
     ADD CONSTRAINT skills_users_skill_id_foreign FOREIGN KEY (skill_id) REFERENCES public.skills(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: skills_users skills_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.skills_users
-    ADD CONSTRAINT skills_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: tag_follows tag_follows_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.tag_follows
-    ADD CONSTRAINT tag_follows_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: tag_follows tag_follows_last_read_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.tag_follows
-    ADD CONSTRAINT tag_follows_last_read_post_id_foreign FOREIGN KEY (last_read_post_id) REFERENCES public.posts(id);
-
-
---
--- Name: user_affiliations user_affiliations_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.user_affiliations
-    ADD CONSTRAINT user_affiliations_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id);
-
-
---
--- Name: user_connections user_connections_other_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.user_connections
-    ADD CONSTRAINT user_connections_other_user_id_foreign FOREIGN KEY (other_user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: user_connections user_connections_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.user_connections
-    ADD CONSTRAINT user_connections_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: user_external_data user_external_data_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.user_external_data
-    ADD CONSTRAINT user_external_data_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -5619,22 +5438,6 @@ ALTER TABLE ONLY public.users_groups_agreements
 
 
 --
--- Name: users_groups_agreements users_groups_agreements_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.users_groups_agreements
-    ADD CONSTRAINT users_groups_agreements_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: users_groups_agreements users_groups_agreements_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.users_groups_agreements
-    ADD CONSTRAINT users_groups_agreements_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: users users_location_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5651,19 +5454,11 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: zapier_triggers_groups zapier_triggers_groups_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: zapier_triggers_groups zapier_triggers_groups_zapier_trigger_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.zapier_triggers_groups
-    ADD CONSTRAINT zapier_triggers_groups_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: zapier_triggers_groups zapier_triggers_groups_trigger_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.zapier_triggers_groups
-    ADD CONSTRAINT zapier_triggers_groups_trigger_id_foreign FOREIGN KEY (zapier_trigger_id) REFERENCES public.zapier_triggers(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT zapier_triggers_groups_zapier_trigger_id_foreign FOREIGN KEY (zapier_trigger_id) REFERENCES public.zapier_triggers(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

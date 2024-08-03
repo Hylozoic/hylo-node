@@ -8,7 +8,7 @@ export async function createInvitation (userId, groupId, data) {
   const group = await Group.find(groupId)
   const user = await User.find(userId)
   const locale = user.get('settings')?.locale || 'en'
-  return GroupMembership.hasModeratorRole(userId, group)
+  return GroupMembership.hasResponsibility(userId, group, Responsibility.constants.RESP_ADD_MEMBERS)
   .then(ok => {
     if (!ok) throw new GraphQLYogaError("You don't have permission to create an invitation for this group")
   })
@@ -47,7 +47,7 @@ export function resendInvitation (userId, invitationId) {
 
 export async function reinviteAll (userId, groupId) {
   const group = await Group.find(groupId)
-  return GroupMembership.hasModeratorRole(userId, group)
+  return GroupMembership.hasResponsibility(userId, group, Responsibility.constants.RESP_ADD_MEMBERS)
   .then(ok => {
     if (!ok) throw new GraphQLYogaError("You don't have permission to modify this invitation")
   })

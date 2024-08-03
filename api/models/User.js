@@ -9,6 +9,7 @@ import { Validators } from 'hylo-shared'
 import HasSettings from './mixins/HasSettings'
 import { findThread } from './post/findOrCreateThread'
 import { generateHyloJWT } from '../../lib/HyloJWT'
+import MemberCommonRole from './MemberCommonRole'
 const { GraphQLYogaError } = require('@graphql-yoga/node')
 
 module.exports = bookshelf.Model.extend(merge({
@@ -111,6 +112,11 @@ module.exports = bookshelf.Model.extend(merge({
       })
   },
 
+  commonRoles () {
+    return this.belongsToMany(CommonRole)
+      .through(MemberCommonRole, 'user_id', 'common_role_id')
+  },
+
   contributions: function () {
     return this.hasMany(Contribution)
   },
@@ -155,7 +161,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   groupRoles () {
     return this.belongsToMany(GroupRole)
-      .through(MemberRole, 'user_id', 'group_role_id')
+      .through(MemberGroupRole, 'user_id', 'group_role_id')
       .where('groups_roles.active', true)
   },
 
@@ -184,11 +190,15 @@ module.exports = bookshelf.Model.extend(merge({
       )
   },
 
+  membershipCommonRoles () {
+    return this.hasMany(MemberCommonRole, 'user_id')
+  },
+
   messageThreads: function () {
     return this.followedPosts().query(q => q.where('type', Post.Type.THREAD))
   },
 
-  moderatedGroupMemberships: function () {
+  moderatedGroupMemberships: function () { // TODO RESP: need to edit this. A helper function has already been created on the Responsibility model, it gets you groupIds and responsibilities tho, need to use that to look up memberships to return
     return this.memberships()
       .where('group_memberships.role', GroupMembership.Role.MODERATOR)
   },
@@ -278,7 +288,7 @@ module.exports = bookshelf.Model.extend(merge({
 
     await this.deleteUserMedia()
     Queue.classMethod('User', 'clearSessionsFor', { userId: this.get('user_id'), sessionId })
-
+    // TODO RESP: will need to add responsibilies, roles, etc to here, where they are missing (some roles are already handled)
     const query = `
     BEGIN;
     UPDATE posts SET name = 'Post by deleted user', description = '', location = NULL, location_id = NULL WHERE user_id = ${this.id};
@@ -288,7 +298,7 @@ module.exports = bookshelf.Model.extend(merge({
 
     DELETE FROM thanks WHERE comment_id in (select id from comments WHERE user_id = ${this.id});
     DELETE FROM thanks WHERE thanked_by_id = ${this.id};
-    DELETE FROM members_roles WHERE user_id = ${this.id};
+    DELETE FROM group_memberships_group_roles WHERE user_id = ${this.id};
     DELETE FROM notifications WHERE activity_id in (select id from activities WHERE reader_id = ${this.id});
     DELETE FROM notifications WHERE activity_id in (select id from activities WHERE actor_id = ${this.id});
     DELETE FROM push_notifications WHERE device_id in (select id from devices WHERE user_id = ${this.id});

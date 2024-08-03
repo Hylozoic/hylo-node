@@ -4,11 +4,11 @@ import { createRequestHandler, makeMutations, makeAuthenticatedQueries } from '.
 import '../../test/setup'
 import factories from '../../test/setup/factories'
 import { mockify, spyify, unspyify } from '../../test/setup/helpers'
-import { some, sortBy } from 'lodash/fp'
+import { some } from 'lodash/fp'
 import { updateFollowers } from '../models/post/util'
 
 describe('graphql request handler', () => {
-  var handler,
+  let handler,
     req, res,
     user, user2,
     group,
@@ -20,7 +20,7 @@ describe('graphql request handler', () => {
     user = factories.user()
     user2 = factories.user()
     group = factories.group()
-    post = factories.post({ type: Post.Type.DISCUSSION})
+    post = factories.post({ type: Post.Type.DISCUSSION })
     post2 = factories.post({ type: Post.Type.REQUEST })
     comment = factories.comment()
     media = factories.media()
@@ -43,16 +43,16 @@ describe('graphql request handler', () => {
       group.posts().attach(post2),
       group.addMembers([user.id, user2.id]).then((memberships) => {
         const earlier = new Date(new Date().getTime() - 86400000)
-        return memberships[0].save({ created_at: earlier }, {patch: true})
+        return memberships[0].save({ created_at: earlier }, { patch: true })
       })
     ])
-    .then(() => Promise.all([
-      updateFollowers(post),
-      updateFollowers(post2)
-    ]))
+      .then(() => Promise.all([
+        updateFollowers(post),
+        updateFollowers(post2)
+      ]))
   })
 
-  after(async function() {
+  after(async function () {
     await groupExtension.destroy()
     await extension.destroy()
   })
@@ -62,7 +62,7 @@ describe('graphql request handler', () => {
     req.url = '/noo/graphql'
     req.method = 'POST'
     req.headers = {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json'
     },
     req.session = {
       userId: user.id,
@@ -557,7 +557,7 @@ describe('graphql request handler', () => {
         `,
         serverContext: { req, res }
       })
-      
+
       return expect(executionResult).to.deep.nested.include({
         data: {
           sendEmailVerification: {
@@ -579,7 +579,7 @@ describe('graphql request handler', () => {
         `,
         serverContext: { req, res }
       })
-      
+
       return expect(executionResult).to.deep.nested.include({
         data: {
           sendEmailVerification: {
@@ -604,7 +604,7 @@ describe('graphql request handler', () => {
         `,
         serverContext: { req, res }
       })
-      
+
       return expect(executionResult).to.deep.nested.include({
         data: {
           sendEmailVerification: {

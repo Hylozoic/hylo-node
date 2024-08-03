@@ -12,6 +12,7 @@ import findOrCreateThread from './post/findOrCreateThread'
 import { groupFilter } from '../graphql/filters'
 import { inviteGroupToGroup } from '../graphql/mutations/group'
 import { findOrCreateLocation } from '../graphql/mutations/location'
+import { whereId } from './group/queryUtils'
 import { es } from '../../lib/i18n/es'
 import { en } from '../../lib/i18n/en'
 
@@ -153,7 +154,16 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsTo(Location, 'location_id')
   },
 
+  availableResponsibilities () {
+    return Responsibility.collection().query(q => {
+      q.whereRaw('group_id = ? or group_id is null', this.id)
+    })
+  },
+
   members (where) {
+    // TODO RESP: does this need to change or should we just build a new one for it... the problem is the access to the role attribute.
+    // It doesn't seem like there are any more Node calls of this that rely on the role being present
+    // But I suspect that there might be graphQL queries that rely on it
     return this.belongsToMany(User).through(GroupMembership)
       .query(q => {
         q.where({
@@ -177,8 +187,27 @@ module.exports = bookshelf.Model.extend(merge({
     return this.get('num_members')
   },
 
+  // TODO: remove when mobile app has been updated
   moderators () {
-    return this.members({ role: GroupMembership.Role.MODERATOR })
+    return this.stewards()
+  },
+
+  stewards () {
+    return this.members().query(q => {
+      q.whereRaw(`(exists (
+        select * from group_memberships_common_roles
+        inner join common_roles_responsibilities on common_roles_responsibilities.common_role_id = group_memberships_common_roles.common_role_id
+        where common_roles_responsibilities.responsibility_id IN (1, 3, 4)
+          and group_memberships_common_roles.user_id = users.id
+          and group_memberships_common_roles.group_id = group_memberships.group_id
+      ) or exists (
+        select * from group_memberships_group_roles
+        inner join group_roles_responsibilities on group_roles_responsibilities.group_role_id = group_memberships_group_roles.group_role_id
+        where group_roles_responsibilities.responsibility_id IN (1, 3, 4)
+          and group_memberships_group_roles.user_id = users.id
+          and group_memberships_group_roles.group_id = group_memberships.group_id
+      ))`)
+    })
   },
 
   // Return # of prereq groups userId is not a member of yet
@@ -339,6 +368,9 @@ module.exports = bookshelf.Model.extend(merge({
           }
         }), { transacting })
       newMemberships.push(membership)
+      // Based on the role attribute, add or remove the user to the Coordinator common role
+      // TODO: RESP, change this to directly pass in and set commonRoles, instead of the role attribute
+      await MemberCommonRole.updateCoordinatorRole({ userId: id, groupId: this.id, role: updatedAttribs.role, transacting })
       // Subscribe each user to the default tags in the group
       await User.followTags(id, this.id, defaultTagIds, transacting)
     }
@@ -421,8 +453,8 @@ module.exports = bookshelf.Model.extend(merge({
   update: async function (changes, updatedByUserId) {
     const whitelist = [
       'about_video_uri', 'active', 'access_code', 'accessibility', 'avatar_url', 'banner_url',
-      'description', 'geo_shape', 'location', 'location_id', 'moderator_descriptor', 'moderator_descriptor_plural',
-      'name', 'purpose', 'settings', 'type_descriptor', 'type_descriptor_plural', 'visibility'
+      'description', 'geo_shape', 'location', 'location_id', 'name', 'purpose', 'settings',
+      'steward_descriptor', 'steward_descriptor_plural', 'type_descriptor', 'type_descriptor_plural', 'visibility'
     ]
     const trimAttrs = ['name', 'description', 'purpose']
 
@@ -653,9 +685,9 @@ module.exports = bookshelf.Model.extend(merge({
     const trimAttrs = ['name', 'purpose']
     const attrs = defaults(
       pick(mapValues(data, (v, k) => trimAttrs.includes(k) ? trim(v) : v),
-        'about_video_uri', 'accessibility', 'avatar_url', 'description', 'slug',
-        'access_code', 'banner_url', 'location_id', 'location', 'group_data_type', 'moderator_descriptor',
-        'moderator_descriptor_plural', 'name', 'purpose', 'settings', 'type', 'type_descriptor', 'type_descriptor_plural', 'visibility'
+        'about_video_uri', 'accessibility', 'access_code', 'avatar_url', 'banner_url', 'description',
+        'location_id', 'location', 'group_data_type', 'name', 'purpose', 'settings', 'slug',
+        'steward_descriptor', 'steward_descriptor_plural', 'type', 'type_descriptor', 'type_descriptor_plural', 'visibility'
       ),
       {
         accessibility: Group.Accessibility.RESTRICTED,
@@ -678,7 +710,7 @@ module.exports = bookshelf.Model.extend(merge({
       settings: { allow_group_invites: false, agreements_last_updated_at: null, public_member_directory: false }
     }))
 
-    const memberships = await bookshelf.transaction(async trx => {
+    await bookshelf.transaction(async trx => {
       await group.save(null, { transacting: trx })
 
       if (data.group_extensions) {
@@ -699,10 +731,9 @@ module.exports = bookshelf.Model.extend(merge({
 
       await group.createDefaultTopics(group.id, userId, trx)
 
-      const members = await group.addMembers([userId],
-        { role: GroupMembership.Role.MODERATOR }, { transacting: trx })
+      await group.addMembers([userId], { role: GroupMembership.Role.MODERATOR }, { transacting: trx })
 
-      // Have to add/request add to parent group after moderator has been added to the group
+      // Have to add/request add to parent group after admin has been added to the group
       if (data.parent_ids) {
         for (const parentId of data.parent_ids) {
           const parent = await Group.findActive(parentId, { transacting: trx })
@@ -713,9 +744,9 @@ module.exports = bookshelf.Model.extend(merge({
               query: q => { q.select('group_memberships.*', 'groups.accessibility as accessibility', 'groups.visibility as visibility')}
             }).fetch({ transacting: trx })
 
+            // TODO: fix hasRole
             if (parentGroupMembership &&
-                (parentGroupMembership.get('role') === GroupMembership.Role.MODERATOR
-                  || parentGroupMembership.get('accessibility') === Group.Accessibility.OPEN)) {
+                (parentGroupMembership.get('accessibility') === Group.Accessibility.OPEN || parentGroupMembership.hasRole(GroupMembership.Role.MODERATOR))) {
               await group.parentGroups().attach(parentId, { transacting: trx })
             } else {
               // If can't add directly to parent group then send a request to join
@@ -724,8 +755,6 @@ module.exports = bookshelf.Model.extend(merge({
           }
         }
       }
-
-      return members
     })
 
     if (data.location && !data.location_id) {
@@ -787,18 +816,18 @@ module.exports = bookshelf.Model.extend(merge({
     }
   },
 
-  messageModerators: async function(fromUserId, groupId) {
+  messageStewards: async function(fromUserId, groupId) {
     // Make sure they can only message a group they can see
     const group = await groupFilter(fromUserId)(Group.where({ id: groupId })).fetch()
-
+    // TODO: ADD RESP TO THIS ONE
     if (group) {
-      const moderators = await group.moderators().fetch()
-      if (moderators.length > 0) {
+      const stewards = await group.stewards().fetch()
+      if (stewards.length > 0) {
         // HACK: add user_connection row so that the people can see each other even though they are not in the same group
-        moderators.forEach(async (m) => {
+        stewards.forEach(async (m) => {
           await UserConnection.create(fromUserId, m.id, UserConnection.Type.MESSAGE)
         })
-        const thread = await findOrCreateThread(fromUserId, moderators.map(m => m.id))
+        const thread = await findOrCreateThread(fromUserId, stewards.map(m => m.id))
         return thread.id
       }
     }
@@ -856,6 +885,35 @@ module.exports = bookshelf.Model.extend(merge({
         q.join('groups', 'groups.id', 'group_memberships.group_id')
         q.where('groups.active', true)
         if (where) q.where(where)
+      },
+      multiple: true
+    }).query()
+  },
+
+  selectIdsByResponsibilities (userOrId, responsibilities) {
+    const throughCommonRole = MemberCommonRole.query(q => {
+      q.select('group_id')
+      whereId(q, userOrId, 'group_memberships_common_roles.user_id')
+      q.join('common_roles_responsibilities', 'common_roles_responsibilities.common_role_id', 'group_memberships_common_roles.common_role_id')
+      q.where('common_roles_responsibilities.responsibility_id', 'in', responsibilities)
+    })
+
+    const throughGroupRole = MemberGroupRole.collection().query(q => {
+      q.select('group_id')
+      whereId(q, userOrId, 'group_memberships_group_roles.user_id')
+      q.join('group_roles_responsibilities', 'group_roles_responsibilities.group_role_id', 'group_memberships_group_roles.group_role_id')
+      q.where('group_roles_responsibilities.responsibility_id', 'in', responsibilities)
+    })
+
+    return GroupMembership.forIds(userOrId, null, {
+      query: q => {
+        q.select('groups.id')
+        q.join('groups', 'groups.id', 'group_memberships.group_id')
+        q.where('groups.active', true)
+        q.where((q2) => {
+          q2.whereIn('groups.id', throughCommonRole.query())
+          q2.orWhereIn('groups.id', throughGroupRole.query())
+        })
       },
       multiple: true
     }).query()

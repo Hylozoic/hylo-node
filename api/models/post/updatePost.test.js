@@ -78,17 +78,17 @@ describe('updatePost', () => {
 })
 
 describe('afterUpdatingPost', () => {
-  var u1, u2, post
+  let u1, u2, post
 
   before(() => {
     u1 = factories.user()
     u2 = factories.user()
     post = factories.post()
     return setup.clearDb()
-    .then(() => Tag.forge({name: 'request'}).save())
-    .then(() => Promise.join(u1.save(), u2.save()))
-    .then(() => post.save())
-    .then(() => post.addFollowers([u1.id]))
+      .then(() => Tag.findOrCreate('request'))
+      .then(() => Promise.join(u1.save(), u2.save()))
+      .then(() => post.save())
+      .then(() => post.addFollowers([u1.id]))
   })
 
   it('adds new followers if there are new mentions', async () => {

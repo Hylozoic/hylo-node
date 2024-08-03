@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.9.0] - 2024-07-23
+
+### Added
+- __More powerful Roles & Responsibilities__: Groups can now have roles that have specific responsibilities, and members can have multiple roles in a group. Roles can be assigned to members by group Coordinators (described below). There are 4 built in System responsibilities: Administration (super admin that can do everything and change all group settings), Manage Content (can remove posts from the group, and edit the Explore page), Remove Members (boot members from the group), and Add Members (full access to the invite and join request functionality for the group).  There are also 3 built in Common Roles that all groups have: Coordinators have full Administration powers, Moderators can Manage Content and Remove Members, and Hosts can Add Members. Groups can also add custom roles with custom responsibilities defined by the group, or custom roles that include the system responsibilities.
+
 ## [5.8.0] - 2024-07-03
 
 ### Added
