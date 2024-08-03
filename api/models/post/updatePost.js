@@ -8,7 +8,7 @@ import {
   updateFollowers
 } from './util'
 
-export default async function updatePost (userId, id, params) {
+export default function updatePost (userId, id, params) {
   if (!id) throw new GraphQLYogaError('updatePost called with no ID')
   return setupPostAttrs(userId, params)
     .then(attrs => bookshelf.transaction(transacting =>

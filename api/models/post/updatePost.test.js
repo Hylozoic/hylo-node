@@ -15,13 +15,17 @@ describe('updatePost', () => {
   })
 
   it('fails without ID', () => {
-    return updatePost(user.id, null, {name: 'foo'})
-    .then(() => {
-      expect.fail('should reject')
-    })
-    .catch(err => {
+    try {
+      return updatePost(user.id, null, {name: 'foo'})
+      .then(() => {
+        expect.fail('should reject')
+      })
+      .catch(err => {
+        expect(err.message).to.equal('updatePost called with no ID')
+      })
+    } catch(err) {
       expect(err.message).to.equal('updatePost called with no ID')
-    })
+    }
   })
 
   it('prevents updating non-existent posts', () => {
