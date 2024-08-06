@@ -357,7 +357,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     createMessage: (root, { data }) => createMessage(userId, data),
 
-    createModerationAction: (root, { data }) => createModerationAction(data, userId),
+    createModerationAction: (root, { data }) => createModerationAction({ data, userId }),
 
     createPost: (root, { data }) => createPost(userId, data),
 

@@ -123,6 +123,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   followers: function () {
     return this.belongsToMany(User).through(PostUser)
+      // .withPivot(['last_read_at', 'clickthrough']) // TODO COMOD: does not seem to work
       .withPivot(['last_read_at'])
       .where({ following: true, 'posts_users.active': true, 'users.active': true })
   },
@@ -291,6 +292,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
     const pu = await this.postUsers()
       .query(q => q.where('user_id', userId)).fetchOne()
     return new Date((pu && pu.get('last_read_at')) || 0)
+  },
+
+  async checkClickthrough (userId) {
+    const pu = await this.postUsers()
+      .query(q => q.where('user_id', userId)).fetchOne()
+    return (pu && pu.get('clickthrough')) || null
   },
 
   totalContributions: async function () {

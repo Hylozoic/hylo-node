@@ -315,7 +315,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
         details: p => p.details(userId),
         isAnonymousVote: p => p.get('anonymous_voting') === 'true',
         myReactions: p => userId ? p.reactionsForUser(userId).fetch() : [],
-        clickthrough: a => a.pivot && a.pivot.get('clickthrough'), // TODO COMOD, verify that this actually works
+        // clickthrough: p => p.pivot && p.pivot.get('clickthrough'), // TODO COMOD: does not seem to work
+        clickthrough: p => p.checkClickthrough(userId),
         myEventResponse: p =>
           userId && p.isEvent()
             ? p.userEventInvitation(userId).then(eventInvitation => eventInvitation ? eventInvitation.get('response') : '')

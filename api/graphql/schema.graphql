@@ -1576,6 +1576,8 @@ type ModerationAction {
   platformAgreements: [PlatformAgreement]
   # The post that was moderated
   post: Post
+  # Just the id of the post
+  postId: ID
   # The status of moderation action
   status: String
   # Description of what the moderation action is about

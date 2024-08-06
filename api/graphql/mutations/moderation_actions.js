@@ -29,10 +29,9 @@ export async function clearModerationAction ({ userId, postId, groupId, moderati
 
 export function recordClickthrough ({ userId, postId }) {
   return Post.find(postId)
-    .then(post => {
-      if (post.get('user_id') !== userId) {
-        throw new GraphQLYogaError("You don't have permission to modify this post")
-      }
+    .then(async post => {
+      const authorized = await Post.isVisibleToUser(postId, userId)
+      if (!authorized) throw new GraphQLYogaError("You don't have permission to see this post")
       return PostUser.clickthroughModeration({ userId, postId })
     })
     .then(() => ({ success: true }))
