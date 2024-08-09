@@ -11,6 +11,18 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(Agreement, 'moderation_actions_agreements', 'moderation_action_id', 'agreement_id')
   },
 
+  group: function () {
+    return this.belongsTo(Group, 'group_id')
+  },
+
+  groupId: function () {
+    return this.get('group_id')
+  },
+
+  anonymous: function () {
+    return this.get('anonymous')
+  },
+
   platformAgreements: function () {
     return this.belongsToMany(PlatformAgreement, 'moderation_actions_platform_agreements', 'moderation_action_id', 'platform_agreement_id')
   },
@@ -25,9 +37,9 @@ module.exports = bookshelf.Model.extend({
 
 }, {
   create: async function (data, opts) {
-    const { agreements, anonymous, platformAgreements, postId, groupId, reporterId, text} = data
+    const { agreements, anonymous, platformAgreements, postId, groupId, reporterId, text } = data
 
-    const modAction = await ModerationAction.forge({ anonymous, post_id: postId, reporter_id: reporterId, text, status: 'active' })
+    const modAction = await ModerationAction.forge({ anonymous, post_id: postId, reporter_id: reporterId, text, status: 'active', groupId })
       .save(null, pick(opts, 'transacting'))
     await modAction.platformAgreements().attach(platformAgreements)
     await modAction.agreements().attach(agreements)

@@ -255,6 +255,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
     joinRequests: (root, args) => fetchMany('JoinRequest', args),
     me: () => fetchOne('Me', userId),
     messageThread: (root, { id }) => fetchOne('MessageThread', id),
+    moderationActions: (root, args) => fetchMany('ModerationAction', args),
     notifications: (root, { first, offset, resetCount, order = 'desc' }) => {
       return fetchMany('Notification', { first, offset, order })
         .tap(() => resetCount && User.resetNewNotificationCount(userId))

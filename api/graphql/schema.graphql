@@ -133,6 +133,19 @@ type Query {
     status: Int
   ): JoinRequestQuerySet
 
+  # Fetch moderation actions
+  moderationActions(
+    # Number of moderation actions to load
+    first: Int,
+    # Start loading moderation actions after this offset
+    offset: Int,
+    # Determines sort order
+    sortBy: String,
+    # Only return moderation actions for this group by URL slug
+    slug: String
+
+  ): ModerationActionQuerySet
+
   # Get the currently logged in user
   me: Me
 
@@ -1568,12 +1581,18 @@ type ModerationAction {
   id: ID
   # The agreements that are linked to the moderation action
   agreements: [Agreement]
+  # junk value, do not use
+  agreementsTotal: Int
   # The person who took the action
   reporter: Person
   # The group where the action was taken
+  group: Group
+  # The groupId where the action was taken
   groupId: ID
   # Platform agreements that are linked to the moderation action
   platformAgreements: [PlatformAgreement]
+  # junk value, do not use
+  platformAgreementsTotal: Int
   # The post that was moderated
   post: Post
   # Just the id of the post
@@ -1586,6 +1605,13 @@ type ModerationAction {
   anonymous: Boolean
   createdAt: Date
   updatedAt: Date
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type ModerationActionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [ModerationAction]
 }
 
 # A notification of an activity for a person
@@ -2930,9 +2956,9 @@ input MessageThreadInput {
 # Data for a ModerationAction
 input ModerationActionInput {
   postId: ID
-  groupId: ID
   text: String 
   anonymous: Boolean
+  groupId: ID
   agreements: [ID]
   platformAgreements: [ID]
 }

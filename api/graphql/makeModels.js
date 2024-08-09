@@ -204,10 +204,18 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'status',
         'text',
         'anonymous',
+        'groupId',
         'created_at',
         'updated_at'
       ],
-      relations: ['post', 'reporter']
+      relations: ['post', 'reporter', 'agreements', 'platformAgreements'],
+      getters: {
+        anonymous: ma => ma.get('anonymous') === 'true'
+      },
+      fetchMany: ({ first = 20, offset = 0, slug, sortBy }) =>
+        searchQuerySet('forModerationActions', {
+          first, offset, currentUserId: userId, slug, sortBy
+        })
     },
 
     Person: {
