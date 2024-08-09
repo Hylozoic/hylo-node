@@ -305,7 +305,8 @@ CREATE TABLE public.comments (
     deactivated_at timestamp with time zone,
     recent boolean,
     created_from character varying(255),
-    comment_id bigint
+    comment_id bigint,
+    edited_at timestamp with time zone
 );
 
 
@@ -2145,6 +2146,7 @@ CREATE TABLE public.posts (
     proposal_strict boolean DEFAULT false,
     anonymous_voting text,
     flagged_groups bigint[]
+    edited_at timestamp with time zone
 );
 
 

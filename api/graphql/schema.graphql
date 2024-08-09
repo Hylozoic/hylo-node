@@ -489,6 +489,8 @@ type Comment {
   createdFrom: String
   # The Person who wrote the comment
   creator: Person
+  # When the text was last edited
+  editedAt: Date
   # For threaded comments what's the parent of this one
   parentComment: Comment
   # The Post this comment is on
@@ -1822,6 +1824,8 @@ type Post {
   details: String
   # Link to a donation page, only used for projects only right now
   donationsLink: String
+  # When this post was last significantly edited (such as title and details)
+  editedAt: Date
   # When this post "ends". Used for events, resources, projects, requests and offers right now
   endTime: Date
   # List of group ids for groups that have flagged this post

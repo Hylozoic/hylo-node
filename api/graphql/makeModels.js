@@ -300,6 +300,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'commentsTotal',
         'created_at',
         'donations_link',
+        'edited_at',
         'end_time',
         'flagged_groups',
         'fulfilled_at',
@@ -848,7 +849,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
     Comment: {
       model: Comment,
       attributes: [
-        'created_at'
+        'created_at',
+        'edited_at'
       ],
       relations: [
         'post',
