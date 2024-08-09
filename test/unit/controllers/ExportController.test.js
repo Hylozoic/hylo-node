@@ -17,7 +17,7 @@ describe('ExportController', function () {
       g1 = await factories.group().save({}, { transacting })
       cm1 = await factories.comment().save({}, { transacting })
       await p1.comments().create(cm1, { transacting })
-      await p1.groups().attach(g1.id)
+      await p1.groups().attach(g1.id, { transacting })
       await g1.addMembers([u1.id], { role: GroupMembership.Role.MODERATOR }, { transacting })
       await g1.addMembers([u2.id], {}, { transacting })
     })

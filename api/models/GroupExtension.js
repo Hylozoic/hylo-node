@@ -1,7 +1,7 @@
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_extensions',
   requireFetch: false,
-  hasTimestamps: true,
+  hasTimestamps: ['created_at', null],
   group () {
     return this.belongsTo(Group)
   },

@@ -18,7 +18,7 @@ describe('GroupExtension', function () {
     await Group.create(user.id, data)
     savedGroup = await Group.find('comm1')
     const earlier = new Date(new Date().getTime() - 86400000)
-    extension = await new Extension({ type: 'test', created_at: earlier, updated_at: earlier }).save()
+    extension = await new Extension({ type: 'test', created_at: earlier }).save()
     groupExtension = await new GroupExtension({ group_id: savedGroup.id, extension_id: extension.id, active: true, data: JSON.stringify({ good: 'luck' }) }).save()
   })
 

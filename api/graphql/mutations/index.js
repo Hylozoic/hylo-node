@@ -75,6 +75,11 @@ export {
   pinPost
 } from './post'
 export {
+  createModerationAction,
+  clearModerationAction,
+  recordClickthrough
+} from './moderation_actions'
+export {
   addPeopleToProjectRole,
   createProject,
   createProjectRole,
@@ -286,6 +291,7 @@ export async function removeSuggestedSkillFromGroup (userId, groupId, skillIdOrN
     .then(() => ({ success: true }))
 }
 
+// TODO COMOD: This need to be left in place to handle comments and members flags. Although it doesn't seem like you can flag comments or members in EVO atm...
 export function flagInappropriateContent (userId, { category, reason, linkData }) {
   let link
   // TODO use FlaggedItem.Type

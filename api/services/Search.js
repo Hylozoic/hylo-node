@@ -1,10 +1,10 @@
 import forUsers from './Search/forUsers'
 import forPosts from './Search/forPosts'
+import forModerationActions from './Search/forModerationActions'
 import { countTotal } from '../../lib/util/knex'
-import addTermToQueryBuilder from './Search/addTermToQueryBuilder'
 import { filterAndSortGroups } from './Search/util'
 import { transform } from 'lodash'
-import { flatten, flow, uniq, get } from 'lodash/fp'
+import { get } from 'lodash/fp'
 
 module.exports = {
   forPosts,
@@ -12,6 +12,8 @@ module.exports = {
   forUsers,
 
   forSkills: opts => Skill.search(opts),
+
+  forModerationActions,
 
   forGroups: function (opts) {
     return Group.query(qb => {

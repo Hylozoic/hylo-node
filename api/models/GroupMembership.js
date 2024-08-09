@@ -45,7 +45,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(User)
   },
 
-  // TODO: update/fix/remove this yeah once mobile app has switched to new roles/responsibilities
+  // TODO RESP: update/fix/remove this yeah once mobile app has switched to new roles/responsibilities
   async hasRole (role) {
     if (role === GroupMembership.Role.MODERATOR) {
       const result = await bookshelf.knex.raw(`SELECT 1 FROM group_memberships_common_roles WHERE user_id = ${this.get('user_id')} AND group_id = ${this.get('group_id')} AND common_role_id = 1 LIMIT 1`)
@@ -156,7 +156,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return !!gm
   },
 
-  // TODO: are these used?
   async setModeratorRole (userId, group) {
     return group.addMembers([userId], { role: this.Role.MODERATOR })
   },

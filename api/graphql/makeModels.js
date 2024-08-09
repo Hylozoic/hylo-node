@@ -198,6 +198,26 @@ export default function makeModels (userId, isAdmin, apiClient) {
       }
     },
 
+    ModerationAction: {
+      model: ModerationAction,
+      attributes: [
+        'status',
+        'text',
+        'anonymous',
+        'groupId',
+        'created_at',
+        'updated_at'
+      ],
+      relations: ['post', 'reporter', 'agreements', 'platformAgreements'],
+      getters: {
+        anonymous: ma => ma.get('anonymous') === 'true'
+      },
+      fetchMany: ({ first = 20, offset = 0, slug, sortBy }) =>
+        searchQuerySet('forModerationActions', {
+          first, offset, currentUserId: userId, slug, sortBy
+        })
+    },
+
     Person: {
       model: User,
       attributes: [
@@ -261,6 +281,16 @@ export default function makeModels (userId, isAdmin, apiClient) {
         })
     },
 
+    PlatformAgreement: {
+      model: PlatformAgreement,
+      attributes: [
+        'id',
+        'description',
+        'text',
+        'type'
+      ]
+    },
+
     Post: {
       model: Post,
       attributes: [
@@ -272,6 +302,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'donations_link',
         'edited_at',
         'end_time',
+        'flagged_groups',
         'fulfilled_at',
         'is_public',
         'link_preview_featured',
@@ -293,6 +324,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
         details: p => p.details(userId),
         isAnonymousVote: p => p.get('anonymous_voting') === 'true',
         myReactions: p => userId ? p.reactionsForUser(userId).fetch() : [],
+        // clickthrough: p => p.pivot && p.pivot.get('clickthrough'), // TODO COMOD: does not seem to work
+        clickthrough: p => p.checkClickthrough(userId),
         myEventResponse: p =>
           userId && p.isEvent()
             ? p.userEventInvitation(userId).then(eventInvitation => eventInvitation ? eventInvitation.get('response') : '')
@@ -306,6 +339,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'locationObject',
         { members: { querySet: true } },
         { eventInvitations: { querySet: true } },
+        { moderationActions: { querySet: true} },
         { proposalOptions: { querySet: true } },
         { proposalVotes: { querySet: true } },
         'linkPreview',

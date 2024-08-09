@@ -22,6 +22,12 @@ module.exports = bookshelf.Model.extend({
     return this
   },
 }, {
+  clickthroughModeration: function ({ userId, postId }) {
+    return bookshelf.knex('posts_users')
+      .where({ user_id: userId, post_id: postId })
+      .update({ clickthrough: true })
+  },
+
   find: function (postId, userId, options) {
     return PostUser.where({ post_id: postId, user_id: userId }).fetch(options)
   },

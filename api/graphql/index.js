@@ -23,6 +23,7 @@ import {
   blockUser,
   cancelGroupRelationshipInvite,
   cancelJoinRequest,
+  clearModerationAction,
   createAffiliation,
   createCollection,
   createComment,
@@ -30,6 +31,7 @@ import {
   createInvitation,
   createJoinRequest,
   createMessage,
+  createModerationAction,
   createPost,
   createProject,
   createProjectRole,
@@ -71,6 +73,7 @@ import {
   processStripeToken,
   reactOn,
   reactivateUser,
+  recordClickthrough,
   regenerateAccessCode,
   registerDevice,
   registerStripeAccount,
@@ -207,6 +210,7 @@ export function makePublicQueries (userId, fetchOne, fetchMany) {
     // Can only access public communities and posts
     group: async (root, { id, slug }) => fetchOne('Group', slug || id, slug ? 'slug' : 'id', { visibility: Group.Visibility.PUBLIC }),
     groups: (root, args) => fetchMany('Group', Object.assign(args, { visibility: Group.Visibility.PUBLIC })),
+    platformAgreements: (root, args) => PlatformAgreement.fetchAll(args),
     post: (root, { id }) => fetchOne('Post', id, 'id', { isPublic: true }),
     posts: (root, args) => fetchMany('Post', Object.assign(args, { isPublic: true }))
   }
@@ -251,6 +255,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
     joinRequests: (root, args) => fetchMany('JoinRequest', args),
     me: () => fetchOne('Me', userId),
     messageThread: (root, { id }) => fetchOne('MessageThread', id),
+    moderationActions: (root, args) => fetchMany('ModerationAction', args),
     notifications: (root, { first, offset, resetCount, order = 'desc' }) => {
       return fetchMany('Notification', { first, offset, order })
         .tap(() => resetCount && User.resetNewNotificationCount(userId))
@@ -258,6 +263,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
     people: (root, args) => fetchMany('Person', args),
     // you can query by id or email, with id taking preference
     person: (root, { id, email }) => fetchOne('Person', id || email, id ? 'id' : 'email'),
+    platformAgreements: (root, args) => PlatformAgreement.fetchAll(args),
     post: (root, { id }) => fetchOne('Post', id),
     posts: (root, args) => fetchMany('Post', args),
     responsibilities: (root, args) => Responsibility.fetchAll(args),
@@ -335,6 +341,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     cancelJoinRequest: (root, { joinRequestId }) => cancelJoinRequest(userId, joinRequestId),
 
+    clearModerationAction: (root, { postId, groupId, moderationActionId }) => clearModerationAction({ userId, postId, groupId, moderationActionId }),
+
     createAffiliation: (root, { data }) => createAffiliation(userId, data),
 
     createCollection: (root, { data }) => createCollection(userId, data),
@@ -349,6 +357,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     createJoinRequest: (root, { groupId, questionAnswers }) => createJoinRequest(userId, groupId, questionAnswers),
 
     createMessage: (root, { data }) => createMessage(userId, data),
+
+    createModerationAction: (root, { data }) => createModerationAction({ data, userId }),
 
     createPost: (root, { data }) => createPost(userId, data),
 
@@ -434,6 +444,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     reactOn: (root, { entityId, data }) => reactOn(userId, entityId, data),
 
     reactivateMe: (root) => reactivateUser({ userId }),
+
+    recordClickthrough: (root, { postId }) => recordClickthrough({ userId, postId }),
 
     regenerateAccessCode: (root, { groupId }) =>
       regenerateAccessCode(userId, groupId),

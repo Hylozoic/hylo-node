@@ -5,6 +5,13 @@ import { ReadableStreamBuffer } from 'stream-buffers'
 import { faker } from '@faker-js/faker'
 
 module.exports = {
+  // agreement: attrs => {
+  //   return new Agreement(merge({
+  //     description: faker.lorem.sentences(2),
+  //     title: faker.random.words(3)
+  //   }, attrs))
+  // },
+
   blockedUser: attrs => {
     return new BlockedUser(merge({
       created_at: new Date(),
@@ -34,6 +41,13 @@ module.exports = {
     return new Post(merge({
       active: true,
       name: faker.random.words(4)
+    }, attrs))
+  },
+
+  postUser: attrs => {
+    return new PostUser(merge({
+      active: true,
+      following: true
     }, attrs))
   },
 
