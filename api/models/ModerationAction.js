@@ -39,7 +39,7 @@ module.exports = bookshelf.Model.extend({
   create: async function (data, opts) {
     const { agreements, anonymous, platformAgreements, postId, groupId, reporterId, text } = data
 
-    const modAction = await ModerationAction.forge({ anonymous, post_id: postId, reporter_id: reporterId, text, status: 'active', groupId })
+    const modAction = await ModerationAction.forge({ anonymous, post_id: postId, reporter_id: reporterId, text, status: 'active', group_id: groupId })
       .save(null, pick(opts, 'transacting'))
     await modAction.platformAgreements().attach(platformAgreements)
     await modAction.agreements().attach(agreements)
