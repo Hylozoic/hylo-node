@@ -10,7 +10,22 @@ export async function createModerationAction ({ userId, data }) {
 
   return ModerationAction.create({ postId, reporterId: userId, groupId, text, anonymous, agreements, platformAgreements })
     .catch((err) => { throw new GraphQLYogaError(`adding of action failed: ${err}`) })
-    .then((result) => result)
+    .then((result) => {
+      Queue.classMethod('ModerationAction', 'sendToModerators', {
+        moderationActionId: result.id,
+        anonymous,
+        groupId,
+        postId
+      })
+
+      Queue.classMethod('ModerationAction', 'sendEmailsPostCreation', {
+        reporterId: userId,
+        groupId,
+        postId
+      })
+
+      return result
+    })
 }
 
 export async function clearModerationAction ({ userId, postId, groupId, moderationActionId }) {
@@ -21,10 +36,16 @@ export async function clearModerationAction ({ userId, postId, groupId, moderati
 
   const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
 
-  if (post.get('user_id') !== userId && !responsibilities.includes(Responsibility.constants.RESP_MANAGE_CONTENT)) throw new GraphQLYogaError("You don't have permission to modify this post")
+  if (!responsibilities.includes(Responsibility.constants.RESP_MANAGE_CONTENT)) throw new GraphQLYogaError("You don't have permission to moderate this post")
 
   return ModerationAction.clearAction({ moderationActionId, userId, postId, groupId })
-    .then(() => ({ success: true }))
+    .then(() => {
+      // Add notifications here
+      // to reportee
+      // to reporter
+      // to moderators
+      return { success: true }
+    })
 }
 
 export function recordClickthrough ({ userId, postId }) {

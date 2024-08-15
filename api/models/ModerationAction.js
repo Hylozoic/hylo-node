@@ -1,6 +1,11 @@
 /* eslint-disable camelcase */
+import { sendMessageFromAxolotl } from '../services/MessagingService'
 
 import { pick } from 'lodash/fp'
+import { es } from '../../lib/i18n/es'
+import { en } from '../../lib/i18n/en'
+
+const locales = { es, en }
 
 module.exports = bookshelf.Model.extend({
   tableName: 'moderation_actions',
@@ -35,6 +40,54 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(User, 'reporter_id')
   },
 
+  async getMessageText ({ group, groupId, anonymous }) {
+    const link = await Frontend.Route.post(this.get('post_id'), group)
+    if (groupId === group.id) {
+      const agreements = this.relations.agreements.models.concat(this.relations.platformAgreements.models)
+
+      return `${this.relations.reporter.get('name')} flagged a post in ${group.get('name')}}\n` +
+      `Message: ${this.get('text')}\n` +
+      `Broken agreements: ${agreements.map(agreement => agreement.get('title') || agreement.get('text')).join(', ')}\n` +
+      `${link}\n\n`
+    } else {
+      const agreements = this.relations.platformAgreements.models
+
+      return `${anonymous ? 'Anonymous reporter' : this.relations.reporter.get('name')} flagged a post in another group: ${group.get('name')}}\n` +
+      `Message: ${this.get('text')}\n` +
+      `Broken agreements: ${agreements.map(agreement => agreement.get('text')).join(', ')}\n` +
+      `${link}\n\n`
+    }
+  },
+
+  async sendEmailsPostCreation ({ reporterId, postId, groupId }) {
+    // email reportee and reporter
+    const group = await Group.find(groupId)
+    const reporter = await User.find(reporterId)
+    const post = await Post.find(postId)
+    const reportee = post.relations.user
+    const link = await Frontend.Route.post(this.get('post_id'), group)
+    const reporterLocale = reporter.get('settings')?.locale || 'en'
+    const reporteeLocale = reportee.get('settings')?.locale || 'en'
+
+    Queue.classMethod('Email', 'sendRawEmail', {
+      email: reporter.get('email'),
+      data: {
+        subject: locales[reporterLocale].youFlaggedAPost(),
+        body: `${locales[reporterLocale].flaggedPostEmailContent({ post, group })}` +
+        `${link}\n\n`
+      }
+    })
+
+    Queue.classMethod('Email', 'sendRawEmail', {
+      email: reportee.get('email'),
+      data: {
+        subject: locales[reporteeLocale].yourPostWasFlagged(),
+        body: `${locales[reporteeLocale].flaggedPostEmailContent({ post, group })}` +
+        `${link}\n\n`
+      }
+    })
+  },
+
 }, {
   create: async function (data, opts) {
     const { agreements, anonymous, platformAgreements, postId, groupId, reporterId, text } = data
@@ -57,5 +110,28 @@ module.exports = bookshelf.Model.extend({
     }
     await Post.removeFromFlaggedGroups({ postId, groupId })
     return action
+  },
+
+  async sendToModerators ({ moderationActionId, postId, groupId, anonymous }) {
+    const moderationAction = await ModerationAction.find(moderationActionId)
+    const groups = await Post.find(postId).groups().fetch()
+
+    const send = async (group, userIds, anonymous) => {
+      const text = await moderationAction.getMessageText({ group, groupId, anonymous })
+      return sendMessageFromAxolotl(userIds, text)
+    }
+    for (let group of groups) {
+      const moderators = await group.moderators().fetch()
+      await send(group, moderators.map(moderator => moderator.id), anonymous)
+    }
+    const shouldSendToAdmins = (process.env.HYLO_ADMINS &&
+      moderationAction.relationships.platformAgreements &&
+      moderationAction.relationships.platformAgreements.length > 0)
+  
+    if (shouldSendToAdmins) {
+      const adminIds = process.env.HYLO_ADMINS.split(',').map(id => Number(id))
+      const group = groups.filter(g => g.id === groupId)
+      await send(group, adminIds, anonymous = false)
+    }
   }
 })

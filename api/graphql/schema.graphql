@@ -764,7 +764,7 @@ type Group {
     userId: ID
   ): MembershipQuerySet
 
-  # TODO: remove when mobile app has been updated to use stewards
+  # This returns any member that has the manage_content responsibility
   moderators(
     # For pagination, return stewards after this ID
     cursor: ID,

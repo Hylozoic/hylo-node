@@ -5,6 +5,7 @@ export default function forModerationActions (opts) {
     qb.distinct()
     qb.limit(opts.limit || 20)
     qb.offset(opts.offset)
+    qb.orderBy('id', 'desc')
 
     // this counts total rows matching the criteria, disregarding limit,
     // which is useful for pagination
