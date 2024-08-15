@@ -59,7 +59,8 @@ module.exports = bookshelf.Model.extend({
     }
   },
 
-  async sendEmailsPostCreation ({ reporterId, postId, groupId }) {
+  async sendEmailsForModerationAction ({ reporterId, postId, groupId, type = 'created' }) {
+    // type is 'created' or 'cleared'
     // email reportee and reporter
     const group = await Group.find(groupId)
     const reporter = await User.find(reporterId)
@@ -69,11 +70,19 @@ module.exports = bookshelf.Model.extend({
     const reporterLocale = reporter.get('settings')?.locale || 'en'
     const reporteeLocale = reportee.get('settings')?.locale || 'en'
 
+    const messageReporter = type === 'created'
+      ? `${locales[reporterLocale].flaggedPostEmailContent({ post, group })}`
+      : `${locales[reporterLocale].clearedPostEmailContent({ post, group })}`
+
+    const messageReportee = type === 'created'
+      ? `${locales[reporteeLocale].flaggedPostEmailContent({ post, group })}`
+      : `${locales[reporteeLocale].clearedPostEmailContent({ post, group })}`
+
     Queue.classMethod('Email', 'sendRawEmail', {
       email: reporter.get('email'),
       data: {
-        subject: locales[reporterLocale].youFlaggedAPost(),
-        body: `${locales[reporterLocale].flaggedPostEmailContent({ post, group })}` +
+        subject: locales[reporterLocale].moderatorClearedYouFlag(),
+        body: messageReporter +
         `${link}\n\n`
       }
     })
@@ -81,8 +90,8 @@ module.exports = bookshelf.Model.extend({
     Queue.classMethod('Email', 'sendRawEmail', {
       email: reportee.get('email'),
       data: {
-        subject: locales[reporteeLocale].yourPostWasFlagged(),
-        body: `${locales[reporteeLocale].flaggedPostEmailContent({ post, group })}` +
+        subject: locales[reporteeLocale].moderatorClearedFlagFromPost(),
+        body: messageReportee +
         `${link}\n\n`
       }
     })

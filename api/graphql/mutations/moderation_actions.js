@@ -18,10 +18,11 @@ export async function createModerationAction ({ userId, data }) {
         postId
       })
 
-      Queue.classMethod('ModerationAction', 'sendEmailsPostCreation', {
+      Queue.classMethod('ModerationAction', 'sendEmailsForModerationAction', {
         reporterId: userId,
         groupId,
-        postId
+        postId,
+        type: 'created'
       })
 
       return result
@@ -40,10 +41,12 @@ export async function clearModerationAction ({ userId, postId, groupId, moderati
 
   return ModerationAction.clearAction({ moderationActionId, userId, postId, groupId })
     .then(() => {
-      // Add notifications here
-      // to reportee
-      // to reporter
-      // to moderators
+      Queue.classMethod('ModerationAction', 'sendEmailsForModerationAction', {
+        reporterId: userId,
+        groupId,
+        postId,
+        type: 'cleared'
+      })
       return { success: true }
     })
 }
