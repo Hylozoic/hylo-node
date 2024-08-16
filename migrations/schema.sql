@@ -1720,6 +1720,7 @@ CREATE TABLE public.moderation_actions (
     text text,
     reporter_id bigint NOT NULL,
     post_id bigint NOT NULL,
+    group_id bigint,
     status text,
     anonymous text,
     created_at timestamp with time zone,
@@ -2145,7 +2146,7 @@ CREATE TABLE public.posts (
     proposal_vote_limit integer,
     proposal_strict boolean DEFAULT false,
     anonymous_voting text,
-    flagged_groups bigint[]
+    flagged_groups bigint[],
     edited_at timestamp with time zone
 );
 
@@ -5744,16 +5745,16 @@ ALTER TABLE ONLY public.group_widgets
 -- Name: groups_agreements groups_agreements_agreement_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.groups_agreements
-    ADD CONSTRAINT groups_agreements_agreement_id_foreign FOREIGN KEY (agreement_id) REFERENCES public.agreements(id);
+-- ALTER TABLE ONLY public.groups_agreements
+--     ADD CONSTRAINT groups_agreements_agreement_id_foreign FOREIGN KEY (agreement_id) REFERENCES public.agreements(id);
 
 
 --
 -- Name: groups_agreements groups_agreements_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.groups_agreements
-    ADD CONSTRAINT groups_agreements_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id);
+-- ALTER TABLE ONLY public.groups_agreements
+--     ADD CONSTRAINT groups_agreements_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id);
 
 
 --
@@ -5897,7 +5898,7 @@ ALTER TABLE ONLY public.group_memberships_group_roles
 --
 
 ALTER TABLE ONLY public.moderation_actions_agreements
-    ADD CONSTRAINT moderation_actions_agreements_agreement_id_foreign FOREIGN KEY (agreement_id) REFERENCES public.agreements(id);
+    ADD CONSTRAINT moderation_actions_agreements_agreement_id_foreign FOREIGN KEY (agreement_id) REFERENCES public.agreements(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -5905,7 +5906,7 @@ ALTER TABLE ONLY public.moderation_actions_agreements
 --
 
 ALTER TABLE ONLY public.moderation_actions_agreements
-    ADD CONSTRAINT moderation_actions_agreements_moderation_action_id_foreign FOREIGN KEY (moderation_action_id) REFERENCES public.moderation_actions(id);
+    ADD CONSTRAINT moderation_actions_agreements_moderation_action_id_foreign FOREIGN KEY (moderation_action_id) REFERENCES public.moderation_actions(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
