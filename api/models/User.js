@@ -352,6 +352,10 @@ module.exports = bookshelf.Model.extend(merge({
     return bookshelf.knex.raw(query)
   },
 
+  getLocale: function () {
+    return this.getSetting('locale') || 'en'
+  },
+
   joinGroup: async function (group, { role = GroupMembership.Role.DEFAULT, fromInvitation = false, questionAnswers = [], transacting = null } = {}) {
     const memberships = await group.addMembers([this.id],
       {

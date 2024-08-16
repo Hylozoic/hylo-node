@@ -5,12 +5,6 @@ import { ReadableStreamBuffer } from 'stream-buffers'
 import { faker } from '@faker-js/faker'
 
 module.exports = {
-  // agreement: attrs => {
-  //   return new Agreement(merge({
-  //     description: faker.lorem.sentences(2),
-  //     title: faker.random.words(3)
-  //   }, attrs))
-  // },
 
   blockedUser: attrs => {
     return new BlockedUser(merge({

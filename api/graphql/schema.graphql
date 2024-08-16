@@ -1585,8 +1585,8 @@ type ModerationAction {
   agreements: [Agreement]
   # junk value, do not use
   agreementsTotal: Int
-  # The person who took the action
-  reporter: Person
+  # Whether the reporter can be seen by all group members or not
+  anonymous: Boolean
   # The group where the action was taken
   group: Group
   # The groupId where the action was taken
@@ -1599,12 +1599,12 @@ type ModerationAction {
   post: Post
   # Just the id of the post
   postId: ID
+   # The person who took the action
+  reporter: Person
   # The status of moderation action
   status: String
   # Description of what the moderation action is about
   text: String
-  # Whether the reporter can be seen by all group members or not
-  anonymous: Boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -2959,12 +2959,12 @@ input MessageThreadInput {
 
 # Data for a ModerationAction
 input ModerationActionInput {
-  postId: ID
-  text: String 
+  agreements: [ID]
   anonymous: Boolean
   groupId: ID
-  agreements: [ID]
   platformAgreements: [ID]
+  postId: ID
+  text: String 
 }
 
 # A geographic point

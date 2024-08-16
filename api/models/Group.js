@@ -853,7 +853,7 @@ module.exports = bookshelf.Model.extend(merge({
       .then(g => {
         const creator = g.relations.creator
         const recipient = process.env.NEW_GROUP_EMAIL
-        const locale = creator.get('settings')?.locale || 'en'
+        const locale = creator.getLocale()
         return Email.sendRawEmail({
           email: recipient,
           data: {

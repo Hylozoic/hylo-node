@@ -67,8 +67,8 @@ module.exports = bookshelf.Model.extend({
     const post = await Post.find(postId)
     const reportee = post.relations.user
     const link = await Frontend.Route.post(this.get('post_id'), group)
-    const reporterLocale = reporter.get('settings')?.locale || 'en'
-    const reporteeLocale = reportee.get('settings')?.locale || 'en'
+    const reporterLocale = reporter.getLocale()
+    const reporteeLocale = reportee.getLocale()
 
     const messageReporter = type === 'created'
       ? `${locales[reporterLocale].flaggedPostEmailContent({ post, group })}`
