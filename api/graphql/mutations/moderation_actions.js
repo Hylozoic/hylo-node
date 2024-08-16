@@ -36,8 +36,9 @@ export async function clearModerationAction ({ userId, postId, groupId, moderati
   if (!post) throw new GraphQLYogaError('Post does not exist')
 
   const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
+  const modAction = await ModerationAction.where({ id: moderationActionId }).fetch()
 
-  if (!responsibilities.includes(Responsibility.constants.RESP_MANAGE_CONTENT)) throw new GraphQLYogaError("You don't have permission to moderate this post")
+  if (!responsibilities.includes(Responsibility.constants.RESP_MANAGE_CONTENT) && modAction.get('reporter_id') !== userId) throw new GraphQLYogaError("You don't have permission to moderate this post")
 
   return ModerationAction.clearAction({ moderationActionId, userId, postId, groupId })
     .then(() => {

@@ -2,7 +2,7 @@ import '../../../test/setup'
 import factories from '../../../test/setup/factories'
 import { recordClickthrough, clearModerationAction, createModerationAction } from './moderation_actions'
 
-describe('createModerationAction', () => {
+describe('Moderation Action', () => {
   var user, post, g1, user2, agreements, modActions
 
   before(async function () {
@@ -42,12 +42,12 @@ describe('createModerationAction', () => {
     return clearModerationAction({ userId: user2.id, postId: post.id, groupId: g1.id, moderationActionId: modActions.models[0].id })
       .then(() => expect.fail('should reject'))
       .catch(e => {
-        return expect(e).to.match(/You don't have permission to modify this post/)
+        return expect(e.message).to.match(/You don't have permission to moderate this post/)
       })
   })
 
   it('Allows reporter to clear their moderationAction on a post', () => {
-    return clearModerationAction({ userId: user.id, postId: post.id, groupId: g1.id, moderationActionId: modActions.models[0].id  })
+    return clearModerationAction({ userId: user.id, postId: post.id, groupId: g1.id, moderationActionId: modActions.models[0].id })
       .then(() => post.moderationActions().fetch())
       .then(moderationActions => {
         expect(moderationActions.models[0].get('status')).to.equal('cleared')
