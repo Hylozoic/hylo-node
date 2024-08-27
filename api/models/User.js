@@ -560,16 +560,16 @@ module.exports = bookshelf.Model.extend(merge({
 
   unlinkAccount (provider) {
     const fieldName = {
-      'facebook': 'facebook_url',
-      'linkedin': 'linkedin_url',
-      'twitter': 'twitter_name'
+      facebook: 'facebook_url',
+      linkedin: 'linkedin_url',
+      twitter: 'twitter_name'
     }[provider]
 
   if (!fieldName) throw new Error(`${provider} not a supported provider`)
 
     return Promise.join(
-      LinkedAccount.query().where({'user_id': this.id, provider_key: provider}).del(),
-      this.save({[fieldName]: null})
+      LinkedAccount.query().where({ user_id: this.id, provider_key: provider }).del(),
+      this.save({ [fieldName]: null })
     )
   },
 
@@ -618,35 +618,35 @@ module.exports = bookshelf.Model.extend(merge({
   AXOLOTL_ID: '13986',
 
   authenticate: Promise.method(function (email, password) {
-    var compare = Promise.promisify(bcrypt.compare, bcrypt)
+    const compare = Promise.promisify(bcrypt.compare, bcrypt)
 
     if (!email) throw new GraphQLYogaError('no email provided')
     if (!password) throw new GraphQLYogaError('no password provided')
 
     return User.query('whereRaw', 'lower(email) = lower(?)', email)
-    .fetch({withRelated: ['linkedAccounts']})
-    .then(function (user) {
-      if (!user) throw new GraphQLYogaError('email not found')
+      .fetch({ withRelated: ['linkedAccounts'] })
+      .then(function (user) {
+        if (!user) throw new GraphQLYogaError('email not found')
 
-      var account = user.relations.linkedAccounts.find(a => a.get('provider_key') === 'password')
+        const account = user.relations.linkedAccounts.find(a => a.get('provider_key') === 'password')
 
-      if (!account) {
-        var keys = user.relations.linkedAccounts.pluck('provider_key')
-        throw new GraphQLYogaError(`password account not found. available: [${keys.join(',')}]`)
-      }
+        if (!account) {
+          const keys = user.relations.linkedAccounts.pluck('provider_key')
+          throw new GraphQLYogaError(`password account not found. available: [${keys.join(',')}]`)
+        }
 
-      return compare(password, account.get('provider_user_id')).then(function (match) {
-        if (!match) throw new GraphQLYogaError('password does not match')
+        return compare(password, account.get('provider_user_id')).then(function (match) {
+          if (!match) throw new GraphQLYogaError('password does not match')
 
-        return user
+          return user
+        })
       })
-    })
   }),
 
   clearSessionsFor: async function({ userId, sessionId }) {
     const redisClient = await RedisClient.create()
     for await (const key of redisClient.scanIterator({ MATCH: `sess:${userId}:*` })) {
-      if (key !== "sess:" + sessionId) {
+      if (key !== 'sess:' + sessionId) {
         await redisClient.del(key)
       }
     }
@@ -663,7 +663,8 @@ module.exports = bookshelf.Model.extend(merge({
         digest_frequency: 'daily',
         signup_in_progress: true,
         dm_notifications: 'both',
-        comment_notifications: 'both'
+        comment_notifications: 'both',
+        post_notifications: 'all'
       },
       active: true
     }, omit(attributes, 'account', 'group', 'role'))
