@@ -30,8 +30,8 @@ jobs:
           corepack enable
           corepack prepare yarn@3.6.4 --activate
     - run:
-        name: Check Yarn version
-        command: yarn --version
+        name: upgrade Yarn version
+        command: npm run yarn@3.6.4 -g
     - run:
         name: Update PATH Environment Variable at Runtime
         command: |
