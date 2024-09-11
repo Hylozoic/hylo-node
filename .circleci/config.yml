@@ -25,10 +25,10 @@ jobs:
     # - run: echo $CIRCLE_PROJECT_REPONAME
     # - run: echo $PATH
     - run:
-        name: Install Yarn 3.x
+        name: Install Yarn 3.6.4
         command: |
           corepack enable
-          corepack prepare yarn@stable --activate
+          corepack prepare yarn@3.6.4 --activate
     - run:
         name: Check Yarn version
         command: yarn --version
