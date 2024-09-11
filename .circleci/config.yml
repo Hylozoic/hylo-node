@@ -31,7 +31,7 @@ jobs:
           corepack prepare yarn@3.6.4 --activate
     - run:
         name: upgrade Yarn version
-        command: npm run yarn@3.6.4 -g
+        command: npm install yarn@3.6.4 -g
     - run:
         name: Update PATH Environment Variable at Runtime
         command: |
