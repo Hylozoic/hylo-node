@@ -30,9 +30,6 @@ jobs:
     #       corepack enable
     #       corepack prepare yarn@latest --activate
     - run:
-        name: upgrade Yarn version
-        command: npm install yarn@latest -g
-    - run:
         name: Update PATH Environment Variable at Runtime
         command: |
           export PATH=$PATH:$HOME/$CIRCLE_PROJECT_REPONAME/node_modules/.bin
@@ -45,6 +42,9 @@ jobs:
     - run: curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
     - restore_cache:
           key: v1-deps-{{ checksum "yarn.lock" }}
+    - run:
+        name: upgrade Yarn version
+        command: npm install yarn@latest -g
     # This would typically go in either a build or a build-and-test job when using workflows
     - run: yarn global add codecov
     - run: yarn config set unsafe-perm true && yarn
