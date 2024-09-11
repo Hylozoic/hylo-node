@@ -30,9 +30,6 @@ jobs:
         corepack enable
         corepack prepare yarn@3.6.4 --activate
     - run:
-        name: Check Yarn version
-        command: yarn --version
-    - run:
         name: Update PATH Environment Variable at Runtime
         command: |
           export PATH=$PATH:$HOME/$CIRCLE_PROJECT_REPONAME/node_modules/.bin
