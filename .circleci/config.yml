@@ -44,7 +44,7 @@ jobs:
           key: v1-deps-{{ checksum "yarn.lock" }}
     - run:
         name: upgrade Yarn version
-        command: yarn policies set-version
+        command: npm upgrade --global yarn
     # This would typically go in either a build or a build-and-test job when using workflows
     - run: yarn global add codecov
     - run: yarn config set unsafe-perm true && yarn
