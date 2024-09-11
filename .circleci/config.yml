@@ -24,14 +24,14 @@ jobs:
     # - run: echo $HOME
     # - run: echo $CIRCLE_PROJECT_REPONAME
     # - run: echo $PATH
-    - run:
-        name: Install Yarn latest
-        command: |
-          corepack enable
-          corepack prepare yarn@latest --activate
+    # - run:
+    #     name: Install Yarn latest
+    #     command: |
+    #       corepack enable
+    #       corepack prepare yarn@latest --activate
     - run:
         name: upgrade Yarn version
-        command: npm install yarn@3.6.4 -g
+        command: npm install yarn@latest -g
     - run:
         name: Update PATH Environment Variable at Runtime
         command: |
