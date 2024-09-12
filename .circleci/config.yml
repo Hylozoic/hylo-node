@@ -55,7 +55,7 @@ jobs:
           yarn --version
     # This would typically go in either a build or a build-and-test job when using workflows
     # - run: yarn global add codecov
-    - run: yarn config set unsafe-perm true && yarn
+    # - run: yarn config set unsafe-perm true && yarn
     # Save dependency cache
     - save_cache:
         key: v1-deps-{{ checksum "yarn.lock" }}
@@ -63,7 +63,7 @@ jobs:
         - node_modules   
     # Test
     - run: yarn cover --forbid-only
-    - run: codecov
+    # - run: codecov
     # Deployment in CircleCI 2.0 are better handled through workflows.
     # See the documentation for more information https://circleci.com/docs/2.0/workflows/
     - store_test_results:
