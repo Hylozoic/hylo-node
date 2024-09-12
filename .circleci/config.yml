@@ -8,7 +8,7 @@ jobs:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
-    - image: cimg/node:20.17.0
+    - image: cimg/node:20.11.1-browsers
     - image: circleci/postgres:13.4-postgis-ram
       environment:
         POSTGRES_USER: postgres
@@ -43,8 +43,10 @@ jobs:
     - restore_cache:
           key: v1-deps-{{ checksum "yarn.lock" }}
     - run:
-        name: upgrade Yarn version
-        command: npm upgrade --global yarn
+        name: Check Node.js and Yarn versions
+        command: |
+          node --version
+          yarn --version
     # This would typically go in either a build or a build-and-test job when using workflows
     - run: yarn global add codecov
     - run: yarn config set unsafe-perm true && yarn
