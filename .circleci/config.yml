@@ -8,7 +8,7 @@ jobs:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
-    - image: cimg/node:16.13.2
+    - image: cimg/node:20.17.0
     - image: circleci/postgres:13.4-postgis-ram
       environment:
         POSTGRES_USER: postgres
@@ -16,43 +16,34 @@ jobs:
         POSTGRES_DB: hylo_test
     - image: redis
     steps:
-    # The following `checkout` command checks out your code to your working directory.
     - checkout
-    # Note: Uncomment or add to the commented list of echos for debugging purposes
-    # setup self referential env vars
-    # Debugging 
-    # - run: echo $HOME
-    # - run: echo $CIRCLE_PROJECT_REPONAME
-    # - run: echo $PATH
     - run:
         name: Update PATH Environment Variable at Runtime
         command: |
           export PATH=$PATH:$HOME/$CIRCLE_PROJECT_REPONAME/node_modules/.bin
-    # Note: Uncomment or add to the commented list of echo's for debugging purposes
-    # - run: echo 'echoing env vars'
-    # - run: echo $CIRCLE_ARTIFACTS
-    # - run: echo $CIRCLE_TEST_REPORTS
-    # - run: echo `node --version`
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
-    - run: curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
     - restore_cache:
-          key: v1-deps-{{ checksum "yarn.lock" }}
-    # This would typically go in either a build or a build-and-test job when using workflows
-    - run: yarn global add codecov
-    - run: yarn config set unsafe-perm true && yarn
-    # Save dependency cache
+        key: v1-deps-{{ checksum "package-lock.json" }}
+    - run:
+        name: Check Node.js version
+        command: node --version
+    - run:
+        name: Install dependencies and codecov
+        command: |
+          npm ci
+          npm install codecov --save-dev
     - save_cache:
-        key: v1-deps-{{ checksum "yarn.lock" }}
-        paths: 
-        - node_modules   
-    # Test
-    - run: yarn cover --forbid-only
-    - run: codecov
-    # Deployment in CircleCI 2.0 are better handled through workflows.
-    # See the documentation for more information https://circleci.com/docs/2.0/workflows/
+        key: v1-deps-{{ checksum "package-lock.json" }}
+        paths:
+        - ~/.npm
+    - run:
+        name: Run tests with coverage
+        command: npm run cover -- --forbid-only
+    - run:
+        name: Upload coverage to Codecov
+        command: npx codecov
     - store_test_results:
         path: /tmp/circleci-test-results
-    # Save artifacts
     - store_artifacts:
         path: /tmp/circleci-artifacts
     - store_artifacts:
