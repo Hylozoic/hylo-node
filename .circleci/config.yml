@@ -8,7 +8,7 @@ jobs:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
-    - image: cimg/node:20.11.1-browsers
+    - image: cimg/node:20.17.0
     - image: circleci/postgres:13.4-postgis-ram
       environment:
         POSTGRES_USER: postgres
@@ -42,6 +42,12 @@ jobs:
     - run: curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
     - restore_cache:
           key: v1-deps-{{ checksum "yarn.lock" }}
+
+    - run:
+        name: Install and use Yarn 3.6.4
+        command: |
+          npm install -g yarn@3.6.4
+          yarn set version 3.6.4
     - run:
         name: Check Node.js and Yarn versions
         command: |
