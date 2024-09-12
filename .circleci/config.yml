@@ -28,19 +28,20 @@ jobs:
         name: Check Node.js version
         command: node --version
     - run:
-        name: Install dependencies
-        command: npm ci
+        name: Install dependencies and codecov
+        command: |
+          npm ci
+          npm install codecov --save-dev
     - save_cache:
         key: v1-deps-{{ checksum "package-lock.json" }}
         paths:
         - ~/.npm
     - run:
-        name: Install global packages
-        command: npm install -g codecov
-    - run:
         name: Run tests with coverage
         command: npm run cover -- --forbid-only
-    - run: codecov
+    - run:
+        name: Upload coverage to Codecov
+        command: npx codecov
     - store_test_results:
         path: /tmp/circleci-test-results
     - store_artifacts:
