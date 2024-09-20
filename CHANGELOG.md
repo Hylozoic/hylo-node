@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.9.1] - 2024-09-19
+
+### Added
+- Track editedAt timestamp for posts and comments
+
+### Changed
+- New users have the default notification setting of all posts, meaning they will now receive notifications for all posts in groups they are a member of, instead of just important ones.
+
 ## [5.9.0] - 2024-07-23
 
 ### Added

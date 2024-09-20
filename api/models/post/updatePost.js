@@ -1,6 +1,7 @@
 const { GraphQLYogaError } = require('@graphql-yoga/node')
 import setupPostAttrs from './setupPostAttrs'
 import updateChildren from './updateChildren'
+import { isEqual } from 'lodash'
 import {
   updateGroups,
   updateAllMedia,
@@ -25,6 +26,10 @@ export default function updatePost (userId, id, params) {
         ]
         if (!updatableTypes.includes(post.get('type'))) {
           throw new GraphQLYogaError("This post can't be modified")
+        }
+
+        if (!isEqual(post.details(), params.description) || !isEqual(post.title(), params.name)) {
+          attrs.edited_at = new Date()
         }
 
         return post.save(attrs, { patch: true, transacting })
