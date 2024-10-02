@@ -38,7 +38,7 @@ const sendEmailWithOptions = curry((templateId, opts) =>
 module.exports = {
   sendSimpleEmail,
 
-  sendRawEmail: (email, data, extraOptions) =>
+  sendRawEmail: ({ email, data, extraOptions }) =>
     sendSimpleEmail(email, 'tem_nt4RmzAfN4KyPZYxFJWpFE', data, extraOptions),
 
   sendPasswordReset: opts =>

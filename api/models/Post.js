@@ -21,7 +21,8 @@ init({ data })
 export const POSTS_USERS_ATTR_UPDATE_WHITELIST = [
   'project_role_id',
   'following',
-  'active'
+  'active',
+  'clickthrough'
 ]
 
 const commentersQuery = (limit, post, currentUserId) => q => {
@@ -90,6 +91,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.get('type') === Post.Type.WELCOME
   },
 
+  flaggedGroups: function () {
+    return this.get('flagged_groups') || []
+  },
+
   commentsTotal: function () {
     return this.get('num_comments')
   },
@@ -118,6 +123,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   followers: function () {
     return this.belongsToMany(User).through(PostUser)
+      // .withPivot(['last_read_at', 'clickthrough']) // TODO COMOD: does not seem to work
       .withPivot(['last_read_at'])
       .where({ following: true, 'posts_users.active': true, 'users.active': true })
   },
@@ -150,6 +156,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
   media: function (type) {
     const relation = this.hasMany(Media)
     return type ? relation.query({ where: { type } }) : relation
+  },
+
+  moderationActions: function () {
+    return this.hasMany(ModerationAction)
   },
 
   postMemberships: function () {
@@ -282,6 +292,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
     const pu = await this.postUsers()
       .query(q => q.where('user_id', userId)).fetchOne()
     return new Date((pu && pu.get('last_read_at')) || 0)
+  },
+
+  async checkClickthrough (userId) {
+    const pu = await this.postUsers()
+      .query(q => q.where('user_id', userId)).fetchOne()
+    return (pu && pu.get('clickthrough')) || null
   },
 
   totalContributions: async function () {
@@ -694,6 +710,28 @@ module.exports = bookshelf.Model.extend(Object.assign({
     if (await post.isFollowed(userId)) return true
 
     return false
+  },
+
+  addToFlaggedGroups: async function ({ groupId, postId }) {
+    return bookshelf.knex.raw(`
+      UPDATE posts
+      SET flagged_groups = array_append(flagged_groups, ?)
+      WHERE id = ?
+    `, [groupId, postId])
+  },
+
+  removeFromFlaggedGroups: async function ({ groupId, postId }) {
+    // The regular postgres array_remove function removes *ALL* matches to whatever is passed in.
+    // There might be several flags for different violations and we want to be able to remove them one by one if needed
+    return bookshelf.knex.raw(`
+      UPDATE posts
+      SET flagged_groups = (
+        SELECT array_agg(elem)
+        FROM unnest(flagged_groups) WITH ORDINALITY AS t(elem, ord)
+        WHERE elem != ? OR ord != (SELECT min(ord) FROM unnest(flagged_groups) WITH ORDINALITY AS t(elem, ord) WHERE elem = ?)
+      )
+      WHERE id = ?
+    `, [groupId, groupId, postId])
   },
 
   find: function (id, options) {

@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.10.0] - 2024-10-02
+
+### Added
+- Community Moderation version 1: When flagging an innapropriate post or comment, you are now required to say why you flagged it, and connect it with one or more group or platfom agreements that it violates. Moderated posts are blurred out in the stream. Moderators are notified and can decide whether to clear the flag or delete the post, or leave it blurred. Moderation decisions are logged under Decisions -> Moderation.
+
 ## [5.9.1] - 2024-09-19
 
 ### Added

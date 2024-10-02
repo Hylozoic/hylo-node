@@ -187,9 +187,23 @@ module.exports = bookshelf.Model.extend(merge({
     return this.get('num_members')
   },
 
-  // TODO: remove when mobile app has been updated
+  // This returns all members with the manage_content responsbility
   moderators () {
-    return this.stewards()
+    return this.members().query(q => {
+      q.whereRaw(`(exists (
+        select * from group_memberships_common_roles
+        inner join common_roles_responsibilities on common_roles_responsibilities.common_role_id = group_memberships_common_roles.common_role_id
+        where common_roles_responsibilities.responsibility_id = 3
+          and group_memberships_common_roles.user_id = users.id
+          and group_memberships_common_roles.group_id = group_memberships.group_id
+      ) or exists (
+        select * from group_memberships_group_roles
+        inner join group_roles_responsibilities on group_roles_responsibilities.group_role_id = group_memberships_group_roles.group_role_id
+        where group_roles_responsibilities.responsibility_id = 3
+          and group_memberships_group_roles.user_id = users.id
+          and group_memberships_group_roles.group_id = group_memberships.group_id
+      ))`)
+    })
   },
 
   stewards () {
@@ -839,20 +853,24 @@ module.exports = bookshelf.Model.extend(merge({
       .then(g => {
         const creator = g.relations.creator
         const recipient = process.env.NEW_GROUP_EMAIL
-        const locale = creator.get('settings')?.locale || 'en'
-        return Email.sendRawEmail(recipient, {
-          subject: locales[locale].groupCreatedNotifySubject(g.get('name')),
-          body: `${locales[locale].Group()}
-            ${locales[locale].Name()}: ${g.get('name')}
-            URL: ${Frontend.Route.group(g)}
-            ${locales[locale].CreatorEmail()}: ${creator.get('email')}
-            ${locales[locale].CreatorName()}: ${creator.get('name')}
-            ${locales[locale].CreatorURL()}: ${Frontend.Route.profile(creator)}
-          `.replace(/^\s+/gm, '').replace(/\n/g, '<br/>\n')
-        }, {
-          sender: {
-            name: 'Hylobot',
-            address: 'dev+bot@hylo.com'
+        const locale = creator.getLocale()
+        return Email.sendRawEmail({
+          email: recipient,
+          data: {
+            subject: locales[locale].groupCreatedNotifySubject(g.get('name')),
+            body: `${locales[locale].Group()}
+              ${locales[locale].Name()}: ${g.get('name')}
+              URL: ${Frontend.Route.group(g)}
+              ${locales[locale].CreatorEmail()}: ${creator.get('email')}
+              ${locales[locale].CreatorName()}: ${creator.get('name')}
+              ${locales[locale].CreatorURL()}: ${Frontend.Route.profile(creator)}
+            `.replace(/^\s+/gm, '').replace(/\n/g, '<br/>\n')
+          },
+          extraOptions: {
+            sender: {
+              name: 'Hylobot',
+              address: 'dev+bot@hylo.com'
+            }
           }
         })
       })

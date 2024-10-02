@@ -94,7 +94,7 @@ TestSetup.prototype.createSchema = function () {
 TestSetup.prototype.clearDb = function () {
   if (!this.initialized) throw new Error('not initialized')
   return bookshelf.knex.transaction(trx => trx.raw('set constraints all deferred')
-    .then(() => Promise.map(this.tables, table => { if (!['public.common_roles', 'public.responsibilities', 'public.common_roles_responsibilities', 'public.tags'].includes(table)) { return trx.raw('delete from ' + table) } })))
+    .then(() => Promise.map(this.tables, table => { if (!['public.common_roles', 'public.responsibilities', 'public.common_roles_responsibilities', 'public.tags', 'public.platform_agreements'].includes(table)) { return trx.raw('delete from ' + table) } })))
 }
 
 module.exports = setup
