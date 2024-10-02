@@ -133,6 +133,19 @@ type Query {
     status: Int
   ): JoinRequestQuerySet
 
+  # Fetch moderation actions
+  moderationActions(
+    # Number of moderation actions to load
+    first: Int,
+    # Start loading moderation actions after this offset
+    offset: Int,
+    # Determines sort order
+    sortBy: String,
+    # Only return moderation actions for this group by URL slug
+    slug: String
+
+  ): ModerationActionQuerySet
+
   # Get the currently logged in user
   me: Me
 
@@ -150,6 +163,9 @@ type Query {
 
   # Query for a MessageThread by ID
   messageThread(id: ID): MessageThread
+
+  # Query for all platform agreements
+  platformAgreements: [PlatformAgreement]
 
   # Query for people
   people(
@@ -748,7 +764,7 @@ type Group {
     userId: ID
   ): MembershipQuerySet
 
-  # TODO: remove when mobile app has been updated to use stewards
+  # This returns any member that has the manage_content responsibility
   moderators(
     # For pagination, return stewards after this ID
     cursor: ID,
@@ -1563,6 +1579,43 @@ type MessageThreadQuerySet {
   items: [MessageThread]
 }
 
+type ModerationAction {
+  id: ID
+  # The agreements that are linked to the moderation action
+  agreements: [Agreement]
+  # junk value, do not use
+  agreementsTotal: Int
+  # Whether the reporter can be seen by all group members or not
+  anonymous: Boolean
+  # The group where the action was taken
+  group: Group
+  # The groupId where the action was taken
+  groupId: ID
+  # Platform agreements that are linked to the moderation action
+  platformAgreements: [PlatformAgreement]
+  # junk value, do not use
+  platformAgreementsTotal: Int
+  # The post that was moderated
+  post: Post
+  # Just the id of the post
+  postId: ID
+   # The person who took the action
+  reporter: Person
+  # The status of moderation action
+  status: String
+  # Description of what the moderation action is about
+  text: String
+  createdAt: Date
+  updatedAt: Date
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type ModerationActionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [ModerationAction]
+}
+
 # A notification of an activity for a person
 type Notification {
   id: ID
@@ -1741,6 +1794,15 @@ type PersonConnectionQuerySet {
   items: [PersonConnection]
 }
 
+type PlatformAgreement {
+  id: Int
+  description: String
+  # The text of the agreement
+  text: String
+  # type; either 'public' or 'anywhere'
+  type: String
+}
+
 type Post {
   id: ID
   # NOT USED RIGHT NOW. Whether this post can accept financial contributions
@@ -1755,6 +1817,8 @@ type Post {
   commentersTotal: Int
   # Total number of comments on this post
   commentsTotal: Int
+  # If this post has been flagged, this tracks whether the user has clicked through the flag-screen
+  clickthrough: Boolean
   createdAt: Date
   # The body of the post
   details: String
@@ -1764,6 +1828,8 @@ type Post {
   editedAt: Date
   # When this post "ends". Used for events, resources, projects, requests and offers right now
   endTime: Date
+  # List of group ids for groups that have flagged this post
+  flaggedGroups: [ID]
   # Number of people following this post (when someone comments on or reacts to a post they follow it)
   followersTotal: Int
   # When the posr creator marked it as "fulfilled" or "complete"
@@ -1843,6 +1909,9 @@ type Post {
 
   # The link preview of the first link in the post that is shown as a card on the post
   linkPreview: LinkPreview
+
+  # Any moderation actions that are linked to this post
+  moderationActions: [ModerationAction]
 
   # The members of a project type Post
   members(first: Int, cursor: ID, order: String): PersonQuerySet
@@ -2203,6 +2272,8 @@ type Mutation {
   cancelGroupRelationshipInvite(groupRelationshipInviteId: ID): GenericResult
   # For a Person who has requested to join another group to cancel that request.
   cancelJoinRequest(joinRequestId: ID): GenericResult
+  # Clear a moderation action; only a 'content manager' or initial reporter can do this.
+  clearModerationAction(postId: ID, groupId: ID, moderationActionId: ID): GenericResult
   # For logged in user to add an Affiliation to their profile
   createAffiliation(data: AffiliationInput): Affiliation
   # Create a new post Collection
@@ -2221,6 +2292,8 @@ type Mutation {
   createJoinRequest(groupId: ID, questionAnswers: [QuestionAnswerInput]): CreatedRequest
   # Send a direct message
   createMessage(data: MessageInput): Message
+  # Create a new moderation action
+  createModerationAction(data: ModerationActionInput): ModerationAction
   # Create a new Post
   createPost(data: PostInput): Post
   # Create a new 'project' type Post NOT USED RIGHT NOW, use createPost instead
@@ -2307,6 +2380,8 @@ type Mutation {
   reactOn(entityId: ID, data: ReactionInput): Post
   # For a deactivated user to reactivate their account.
   reactivateMe(id: ID): GenericResult
+  # Record a click through on a moderated post
+  recordClickthrough(postId: ID): GenericResult
   # Regenerate the invite URL used to invite people to a Group. Only a group Host can call this.
   regenerateAccessCode(groupId: ID): Group
   # Register a new mobile device to the current logged in user account
@@ -2880,6 +2955,16 @@ input MessageInput {
 input MessageThreadInput {
   # The IDs of the participants in the thread
   participantIds: [String]
+}
+
+# Data for a ModerationAction
+input ModerationActionInput {
+  agreements: [ID]
+  anonymous: Boolean
+  groupId: ID
+  platformAgreements: [ID]
+  postId: ID
+  text: String 
 }
 
 # A geographic point

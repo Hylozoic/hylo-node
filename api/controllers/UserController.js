@@ -18,7 +18,7 @@ module.exports = {
     if (user) {
       // User already exists
       if (group) {
-        const locale = user?.get('settings')?.locale || 'en'
+        const locale = user?.getLocale()
         if (!(await GroupMembership.hasActiveMembership(user, group))) {
           // If user exists but is not part of the group then invite them
           let message = locales[locale].apiInviteMessageContent(req.api_client)
