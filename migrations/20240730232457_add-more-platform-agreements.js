@@ -15,17 +15,15 @@ exports.up = async function (knex) {
   await knex('platform_agreements').insert([
     { text: 'Inappropriate Content', type: 'public' },
     { text: 'Trolling', type: 'public' },
-    { text: 'Sexual or Violent Content', type: 'public' },
-    { text: 'Spam', type: 'public' },
-    { text: 'Adverting', type: 'public' },
-    { text: 'Promotion', type: 'public' },
+    { text: 'Sexual Content', type: 'public' },
+    { text: 'Violence', type: 'public' },
+    { text: 'Spam, Advertising or Promotion', type: 'public' },
     { text: 'Violence, Abuse, & Self-Harm', type: 'anywhere' },
-    { text: 'Privacy & Consent violations', type: 'anywhere' },
-    { text: 'Illegal Activities', type: 'anywhere' },
+    { text: 'Privacy or Consent Violation', type: 'anywhere' },
+    { text: 'Illegal Activity', type: 'anywhere' },
     { text: 'Platform Manipulation', type: 'anywhere' },
-    { text: 'Lacking civic Integrity', type: 'anywhere' },
-    { text: 'Misleading and Deceptive Identities (anon and clear parody is permitted)', type: 'anywhere' },
-    { text: 'Account Compromise', type: 'anywhere' }
+    { text: 'Civic Integrity', type: 'anywhere' },
+    { text: 'Deceptive Identity (anonymous or clear parody permitted)', type: 'anywhere' }
   ])
 
   await knex.schema.createTable('moderation_actions_platform_agreements', table => {
