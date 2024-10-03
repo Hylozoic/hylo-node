@@ -66,7 +66,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   locale: function () {
-    return this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    return this.reader().get('settings')?.locale || this.actor().getLocale()
   },
 
   postUrlHelper: function ({ post, group, isPublic = false, topic, reader }) {

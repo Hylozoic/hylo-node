@@ -18,16 +18,20 @@ module.exports = {
     var email = params.e
     var token = generateToken(params.t, params.a, params.d, params.h)
 
+    // TODO REMOVE: this is probably trash
     Nexudus.fetchUsers(params.a, token)
-    .tap(results => Email.sendRawEmail('robbie@hylo.com', {
-      subject: format('Nexudus user records (%s) for %s', results.length, email)
-    }, {
-      files: [{
-        id: 'users.json',
-        data: Buffer.from(JSON.stringify(results, null, '  ')).toString('base64')
-      }]
-    }))
-    .tap(results => res.ok(format('Sent %s records to Hylo.', results.length)))
-    .catch(res.serverError)
+      .tap(results => Email.sendRawEmail({
+        email: 'robbie@hylo.com',
+        data: {
+          subject: format('Nexudus user records (%s) for %s', results.length, email)
+        },
+        extraOptions: {
+          files: [{
+            id: 'users.json',
+            data: Buffer.from(JSON.stringify(results, null, '  ')).toString('base64')
+          }]
+        }}))
+      .tap(results => res.ok(format('Sent %s records to Hylo.', results.length)))
+      .catch(res.serverError)
   }
 }

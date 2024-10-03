@@ -22,6 +22,15 @@ module.exports = bookshelf.Model.extend({
     return this
   },
 }, {
+  clickthroughModeration: function ({ userId, postId }) {
+    return bookshelf.knex.raw(`
+      INSERT INTO posts_users (user_id, post_id, clickthrough)
+      VALUES (?, ?, ?)
+      ON CONFLICT (user_id, post_id)
+      DO UPDATE SET clickthrough = EXCLUDED.clickthrough
+    `, [userId, postId, true])
+  },
+
   find: function (postId, userId, options) {
     return PostUser.where({ post_id: postId, user_id: userId }).fetch(options)
   },
