@@ -14,6 +14,7 @@
     "node": "^20",
     "yarn": "^3.6.4"
   },
+  "packageManager": "yarn@3.6.4",
   "nyc": {
     "sourceMap": false,
     "instrument": false,

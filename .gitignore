@@ -32,3 +32,4 @@ startserver.sh
 # .devcontainer/datahome is for local data within the container, e.g. shell history
 .devcontainer/datahome/*
 !.devcontainer/datahome/.gitkeep
+.yarn
