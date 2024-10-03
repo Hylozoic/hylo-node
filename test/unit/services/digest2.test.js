@@ -450,8 +450,13 @@ describe('group digest v2', () => {
 
     it('calls SendWithUs with expected data', function () {
       this.timeout(10000)
-      const clickthroughParams = `?ctt=digest_email&cti=${u1.id}&ctcn=${encodeURIComponent(group.get('name'))}`
-
+      const params = new URLSearchParams({
+        ctt: 'digest_email',
+        cti: u1.id,
+        ctcn: group.get('name')
+      })
+      const clickthroughParams = `?${params.toString()}`
+      console.log(clickthroughParams, 'meeps')
       return sendAllDigests('daily').then(result => {
         expect(result).to.deep.equal([[group.id, 1]])
         expect(Email.sendSimpleEmail).to.have.been.called()

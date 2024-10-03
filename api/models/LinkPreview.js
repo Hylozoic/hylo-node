@@ -37,9 +37,7 @@ const LinkPreview = bookshelf.Model.extend({
 
       return preview.save(attrs)
     } catch (err) {
-      preview.save(doneAttrs())
-
-      return {}
+      return preview.save(doneAttrs())
     }
   },
 
