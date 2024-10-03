@@ -1796,9 +1796,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mapbox/mapbox-sdk@npm:^0.16.1":
-  version: 0.16.1
-  resolution: "@mapbox/mapbox-sdk@npm:0.16.1"
+"@mapbox/mapbox-sdk@npm:^0.13.3":
+  version: 0.13.7
+  resolution: "@mapbox/mapbox-sdk@npm:0.13.7"
   dependencies:
     "@mapbox/fusspot": ^0.4.0
     "@mapbox/parse-mapbox-token": ^0.2.0
@@ -1808,7 +1808,7 @@ __metadata:
     got: ^11.8.5
     is-plain-obj: ^1.1.0
     xtend: ^4.0.1
-  checksum: 65c54c4dd184d56868ab30781d1cc254a47e219aad3bafd025eeb5ebe992e3ecdcbb8c44ef35820fd5ac406f385b1a44bf2918a8f1edae3b738bd1b962091ac1
+  checksum: a34de3cfa0485ca52092ac18a2293bf5ed6898c603066f93708aac24dddf0a1d5afffb641aefb1082fc04a433368207312a173cd249af438eb0820a3b163fae3
   languageName: node
   linkType: hard
 
@@ -8895,7 +8895,7 @@ __metadata:
     "@envelop/core": ^2.6.0
     "@faker-js/faker": ^6.3.1
     "@graphql-yoga/node": ^2.13.13
-    "@mapbox/mapbox-sdk": ^0.16.1
+    "@mapbox/mapbox-sdk": ^0.13.3
     "@sailshq/connect-redis": ^3.2.1
     "@sailshq/socket.io-redis": ^5.2.0
     analytics-node: ^1.2.0
